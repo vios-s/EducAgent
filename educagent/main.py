@@ -10,19 +10,19 @@ from rich import box
 
 from educagent.agents.query_agent import query_agent, RAGQueryAgentInputSchema, RAGQueryAgentOutputSchema
 from educagent.agents.socratic_agent import qa_agent, RAGQuestionAnsweringAgentInputSchema, RAGQuestionAnsweringAgentOutputSchema
+from educagent.agents.welcome_agent import welcome_agent, WelcomeAgentInputSchema, WelcomeAgentOutputSchema
 from educagent.services.memory import shared_memory
 from educagent.context_providers import RAGContextProvider, ChunkItem
 from educagent.services.factory import create_vector_db_service
 from educagent.services.base import BaseVectorDBService
 from educagent.config import VECTOR_DB_TYPE, DOCUMENT_DIR
+from educagent.utils import *
 
 load_dotenv()
 
-console = Console()
-
 
 WELCOME_MESSAGE = """
-🎓 Welcome to EducAgent - Your Personal Causality Tutor! 🎓
+Welcome to EducAgent - Your Personal Causality Tutor!
 
 I'm here to help you learn causality concepts through personalized, Socratic dialogue.
 To provide the best learning experience, I'd like to know a bit about you first.
@@ -43,300 +43,60 @@ STARTER_EXAMPLES = [
     "I'm a law student interested in how causality works in legal reasoning and liability cases."
 ]
 
-def chunk_document(file_path: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
-    """ Split PDF and text documents into chunks with overlap for ChromaDB storage."""
-    import pypdf
-    import re
-    from pathlib import Path
-    
-    # Get chunk parameters from environment or use defaults
-    chunk_size = int(os.getenv("CHUNK_SIZE", chunk_size))
-    overlap = int(os.getenv("CHUNK_OVERLAP", overlap))
-    
-    chunks = []
-    
-    # Handle single file or directory
-    if os.path.isfile(file_path):
-        files = [file_path]
-    elif os.path.isdir(file_path):
-        # Support both PDF and text files
-        path_obj = Path(file_path)
-        files = list(path_obj.glob("*.pdf")) + list(path_obj.glob("*.txt"))
-    else:
-        raise ValueError(f"Path {file_path} is neither a file nor directory")
-    
-    for file in files:
-        try:
-            text = ""
-            
-            if str(file).endswith('.pdf'):
-                # Extract text from PDF
-                with open(file, 'rb') as f:
-                    pdf_reader = pypdf.PdfReader(f)
-                    
-                    for page_num, page in enumerate(pdf_reader.pages):
-                        page_text = page.extract_text()
-                        if page_text.strip():  # Only add non-empty pages
-                            text += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
-            
-            elif str(file).endswith('.txt'):
-                # Extract text from text file
-                with open(file, 'r', encoding='utf-8') as f:
-                    text = f.read()
-            
-            if not text.strip():
-                console.print(f"[yellow]Warning: No text extracted from {file}[/yellow]")
-                continue
-            
-            # Clean and normalize text
-            text = re.sub(r'\s+', ' ', text)  # Normalize whitespace
-            text = re.sub(r'\n+', '\n', text)  # Normalize newlines
-            
-            # Split into sentences for better chunking boundaries
-            sentences = re.split(r'(?<=[.!?])\s+', text)
-            
-            current_chunk = ""
-            current_size = 0
-            
-            for sentence in sentences:
-                sentence = sentence.strip()
-                if not sentence:
-                    continue
-                    
-                # Check if adding this sentence exceeds chunk size
-                if current_size + len(sentence) > chunk_size and current_chunk:
-                    # Save current chunk
-                    chunks.append(current_chunk.strip())
-                    
-                    # Start new chunk with overlap from previous chunk
-                    if overlap > 0 and chunks:
-                        # Get last N words for overlap
-                        words = current_chunk.split()
-                        overlap_words = words[-overlap:] if len(words) >= overlap else words
-                        current_chunk = " ".join(overlap_words) + " " + sentence
-                        current_size = len(current_chunk)
-                    else:
-                        current_chunk = sentence
-                        current_size = len(sentence)
-                else:
-                    # Add sentence to current chunk
-                    if current_chunk:
-                        current_chunk += " " + sentence
-                        current_size += len(sentence) + 1
-                    else:
-                        current_chunk = sentence
-                        current_size = len(sentence)
-            
-            # Don't forget the last chunk
-            if current_chunk.strip():
-                chunks.append(current_chunk.strip())
-                
-        except Exception as e:
-            console.print(f"[red]Error processing {file}: {str(e)}[/red]")
-            continue
-    
-    # Filter out very short chunks (likely noise)
-    chunks = [chunk for chunk in chunks if len(chunk.split()) >= 10]
-    
-    return chunks
-    
-    
-def initialise_system() -> tuple[BaseVectorDBService, RAGContextProvider]:
-    """Initialise the RAG system components."""
-    console.print("\n [bold magenta]🚀 Initialising RAG system...[/bold magenta]")
-    
+def welcome_and_profile_user():
+    """Welcome the user and profile them using the welcome agent."""
+
+    display_welcome(WELCOME_MESSAGE, starter_examples=STARTER_EXAMPLES)
+
     try:
-        # Process PDF documents and create chunks
-        doc_path = DOCUMENT_DIR
-        chunks = chunk_document(doc_path, chunk_size=1000, overlap=200)
-        console.print(f"[dim]• Created {len(chunks)} document chunks[/dim]")
-        
-        # Initialise vector database
-        console.print(f"[dim]• Initializing {VECTOR_DB_TYPE.value} vector database...[/dim]")
-        vector_db = create_vector_db_service(collection_name="causality_textbook", recreate_collection=False)
-        
-        # Add chunks to vector database
-        console.print("[dim]• Adding document chunks to vector database...[/dim]")
-        chunk_ids = vector_db.add_documents(documents=chunks, metadatas=[{"source": "causality_textbook", "chunk_index": i} for i in range(len(chunks))])
-        console.print(f"[dim]• Added {len(chunk_ids)} chunks to vector database[/dim]")
-        
-        # Initialize context provider
-        console.print("[dim]• Creating context provider...[/dim]")
-        rag_context = RAGContextProvider("RAG Context")
+        user_response = console.input("\n[bold blue]Tell me about yourself:[/bold blue] ").strip()
 
-        # Register context provider with agents
-        console.print("[dim]• Registering context provider with agents...[/dim]")
-        query_agent.register_context_provider("rag_context", rag_context)
-        qa_agent.register_context_provider("rag_context", rag_context)
-        
-        # Clear any previous session memory
-        shared_memory.clear_memory()
-        
-        console.print("[bold green]✨ System initialized successfully![/bold green]\n")
-        return vector_db, rag_context
-    
-    except Exception as e:
-        console.print(f"\n[bold red]Error during initialization:[/bold red] {str(e)}")
-        raise
-    
-    
-# Display helper functions
-def display_welcome() -> None:
-    """Display welcome message and starter questions."""
-    welcome_panel = Panel(
-        WELCOME_MESSAGE.format(db_type=VECTOR_DB_TYPE.value.upper()),
-        title="[bold blue]EducAgent[/bold blue]",
-        border_style="blue",
-        padding=(1, 2),
-    )
-    console.print("\n")
-    console.print(welcome_panel)
-    
-    table = Table(
-        show_header=True, header_style="bold cyan", box=box.ROUNDED, title="[bold]Examples to Get Started[/bold]"
-    )
-    table.add_column("№", style="dim", width=4)
-    table.add_column("Question", style="green")
+        if user_response.lower() in ["/exit", "/quit"]:
+            return False
 
-    for i, question in enumerate(STARTER_EXAMPLES, 1):
-        table.add_row(str(i), question)
+        # Check if user selected an example by number
+        try:
+            i_example = int(user_response) - 1
+            if 0 <= i_example < len(STARTER_EXAMPLES):
+                user_response = STARTER_EXAMPLES[i_example]
+        except ValueError:
+            pass
 
-    console.print("\n")
-    console.print(table)
-    console.print("\n" + "─" * 80 + "\n")
-    
-# For Debug use
-def display_chunks(chunks: List[ChunkItem])->None:
-    """Display the retrieved chunks in a formatted way."""
-    console.print("\n[bold cyan]📚 Retrieved Text Chunks:[/bold cyan]")
+        console.print("\n" + "─" * 80)
+        console.print("\n[bold magenta]🔄 Processing your profile...[/bold magenta]")
 
-    for i, chunk in enumerate(chunks, 1):
-        chunk_panel = Panel(
-            Markdown(chunk.content),
-            title=f"[bold]Chunk {i} (Distance: {chunk.metadata['distance']:.4f})[/bold]",
-            border_style="blue",
-            padding=(1, 2),
-        )
-        console.print(chunk_panel)
-        console.print()
-        
-# For Debug use  
-def display_query_info(query_output: RAGQueryAgentOutputSchema)-> None:
-    """Display information about the generated query."""
-    query_panel = Panel(
-        f"[yellow]Generated Query:[/yellow] {query_output.query}\n\n" f"[yellow]Reasoning:[/yellow] {query_output.reasoning}",
-        title="[bold]🔍 Semantic Search Strategy[/bold]",
-        border_style="yellow",
-        padding=(1, 2),
-    )
-    console.print("\n")
-    console.print(query_panel)
+        # Use the welcome agent to process the response
+        agent_output = welcome_agent.run(WelcomeAgentInputSchema(user_response=user_response))
 
-def display_tailored_explanation(query_output: RAGQueryAgentOutputSchema) -> None:
-    """Display the tailored explanation from query agent."""
-    explanation_panel = Panel(
-        Markdown(query_output.tailored_explanation),
-        title="[bold]📖 Concept Explanation[/bold]",
-        border_style="green",
-        padding=(1, 2),
-    )
-    console.print("\n")
-    console.print(explanation_panel)
-    
-# 
-def display_socratic_response(qa_output: RAGQuestionAnsweringAgentOutputSchema) -> None:
-    """Display the Socratic response from the teaching agent."""
-    # Display Socratic response
-    socratic_panel = Panel(
-        Markdown(qa_output.socratic_response),
-        title="[bold]💡 Socratic Tutor[/bold]",
-        border_style="blue",
-        padding=(1, 2),
-    )
-    console.print("\n")
-    console.print(socratic_panel)
-    
-    # Display understanding assessment
-    assessment_color = {
-        "developing": "red",
-        "partial": "yellow", 
-        "good": "green",
-        "excellent": "bright_green"
-    }.get(qa_output.understanding_assessment, "white")
-    
-    assessment_panel = Panel(
-        f"[{assessment_color}]Understanding Level: {qa_output.understanding_assessment.title()}[/{assessment_color}]",
-        title="[bold]📊 Learning Assessment[/bold]",
-        border_style=assessment_color,
-        padding=(1, 2),
-    )
-    console.print("\n")
-    console.print(assessment_panel)
-
-def display_session_summary(qa_output: RAGQuestionAnsweringAgentOutputSchema) -> None:
-    """Display the final session summary."""
-    if qa_output.session_summary:
-        summary_panel = Panel(
-            Markdown(qa_output.session_summary),
-            title="[bold]🎓 Learning Session Summary[/bold]",
-            border_style="bright_green",
+        # Display personalized welcome
+        welcome_panel = Panel(
+            Markdown(agent_output.personalized_welcome),
+            title="[bold]🤗 Welcome[/bold]",
+            border_style="green",
             padding=(1, 2),
         )
         console.print("\n")
-        console.print(summary_panel)
-    
+        console.print(welcome_panel)
 
+        
+        # Create user profile dictionary
+        user_profile = {
+            "background": agent_output.background,
+            "learning_goals": agent_output.learning_goals,
+            "experience_level": agent_output.experience_level
+        }
 
-def welcome_and_profile_user() -> bool:
-    """Welcome user and collect their profile. Returns True if profiling is complete."""
-    display_welcome()
+        # Update shared memory with user profile
+        shared_memory.update_user_profile(user_profile)
+        shared_memory.add_conversation_entry("system", user_response, agent_output.personalized_welcome)
 
-    while True:
-        try:
-            user_response = console.input("\n[bold blue]Tell me about yourself:[/bold blue] ").strip()
+        console.print("\n[bold green]✨ Great! Let's start your causality learning journey![/bold green]")
+        return user_profile
+        
+    except Exception as e:
+        console.print(f"\n[bold red]Error:[/bold red] {str(e)}")
+        console.print("[dim]Please try again or type 'exit' to quit.[/dim]")
 
-            if user_response.lower() in ["/exit", "/quit"]:
-                return False
-
-            # Check if user selected an example
-            try:
-                i_example = int(user_response) - 1
-                if 0 <= i_example < len(STARTER_EXAMPLES):
-                    user_response = STARTER_EXAMPLES[i_example]
-            except ValueError:
-                pass
-
-            console.print("\n" + "─" * 80)
-            console.print("\n[bold magenta]🔄 Processing your profile...[/bold magenta]")
-
-            # Create a simple user profile from the response
-            user_profile = {
-                "background": user_response,
-                "learning_goals": "Learn causality concepts",
-                "experience_level": "beginner"  # Default assumption
-            }
-
-            # Display personalized welcome
-            welcome_message = f"Welcome! I understand you'd like to learn about causality. Based on your background: '{user_response}', I'll tailor the explanations to your level and interests."
-            welcome_panel = Panel(
-                Markdown(welcome_message),
-                title="[bold]🤗 Personalized Welcome[/bold]",
-                border_style="green",
-                padding=(1, 2),
-            )
-            console.print("\n")
-            console.print(welcome_panel)
-
-            # Update shared memory with user profile
-            shared_memory.update_user_profile(user_profile)
-            shared_memory.add_conversation_entry("system", user_response, welcome_message)
-
-            console.print("\n[bold green]✨ Great! Let's start your causality learning journey![/bold green]")
-            return True
-
-        except Exception as e:
-            console.print(f"\n[bold red]Error:[/bold red] {str(e)}")
-            console.print("[dim]Please try again or type 'exit' to quit.[/dim]")
 
 
 def learning_loop(vector_db: BaseVectorDBService, rag_context: RAGContextProvider) -> None:
@@ -439,12 +199,14 @@ def learning_loop(vector_db: BaseVectorDBService, rag_context: RAGContextProvide
 def main_workflow(vector_db: BaseVectorDBService, rag_context: RAGContextProvider) -> None:
     """Main workflow following the planned architecture."""
     # Phase 0: Welcome and profile user
-    if not welcome_and_profile_user():
+    user_profile = welcome_and_profile_user()
+    if not user_profile:
         return
-    
+
     # Phase 1 & 2: Learning loop with concept explanation and Socratic dialogue
     learning_loop(vector_db, rag_context)
-    
+
+    from educagent.utils import console
     console.print("\n[bold]🎓 Thank you for using EducAgent! Your learning progress has been saved.[/bold]")
             
             
