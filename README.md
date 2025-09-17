@@ -172,11 +172,3 @@ For code style and dependencies the project uses `pyproject.toml` (Poetry). Keep
 This repository includes a `LICENSE` file in the project root — please see `LICENSE` for full terms.
 
 ---
-
-<!-- If you want, I can also:
-
-- add a short `docs/` folder with a development walkthrough,
-- create a small automated `make`/`poetry` script to bootstrap `.env` and initial DB creation,
-- or generate example unit tests for the chunker and the ChromaDB service.
-
-If you'd like any of those, tell me which and I'll implement it next. -->

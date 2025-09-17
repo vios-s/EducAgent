@@ -214,7 +214,5 @@ resources/
 
 # poetry
 poetry.lock
-pyproject.toml
-
 # chromadb
 chroma_db/

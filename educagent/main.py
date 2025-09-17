@@ -1,6 +1,5 @@
 import os
 from typing import List
-import wget
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.panel import Panel
@@ -11,6 +10,7 @@ from rich import box
 
 from educagent.agents.query_agent import query_agent, RAGQueryAgentInputSchema, RAGQueryAgentOutputSchema
 from educagent.agents.socratic_agent import qa_agent, RAGQuestionAnsweringAgentInputSchema, RAGQuestionAnsweringAgentOutputSchema
+from educagent.services.memory import shared_memory
 from educagent.context_providers import RAGContextProvider, ChunkItem
 from educagent.services.factory import create_vector_db_service
 from educagent.services.base import BaseVectorDBService
@@ -22,26 +22,30 @@ console = Console()
 
 
 WELCOME_MESSAGE = """
-Welcome to the EducAgent! I can help you learn causality.
-Ask me any questions about causality and I'll use my knowledge base to provide accurate answers.
+🎓 Welcome to EducAgent - Your Personal Causality Tutor! 🎓
 
-I'll show you my thought process:
-1. First, I'll ask you about your profile and background.
-2. Then, I'll start from a concept that fit for your current level retrieve relevant chunks of text from the speech.
-3. Finally, I'll analyze these chunks to provide you with an answer
+I'm here to help you learn causality concepts through personalized, Socratic dialogue.
+To provide the best learning experience, I'd like to know a bit about you first.
+
+Please tell me:
+• Your background (field of study, profession, or general interest)
+• What you already know about causality (if anything)
+• What specific causality concepts you'd like to explore
 
 Using vector database: {db_type}
 """
 
 STARTER_EXAMPLES = [
-    "I am a computer science student with no knowledge of causality.",
-    "I have a background in psychology and want to learn about causal inference.",
-    "I am a medical school student and I know the correlation and causation."
+    "I am a computer science student with no knowledge of causality. I want to understand how it applies to debugging and system design.",
+    "I have a background in psychology and want to learn about causal inference for research design.",
+    "I am a medical school student and I know the difference between correlation and causation, but want to learn about confounders.",
+    "I work in economics and want to understand how to identify causal relationships in policy analysis.",
+    "I'm a law student interested in how causality works in legal reasoning and liability cases."
 ]
 
 def chunk_document(file_path: str, chunk_size: int = 1000, overlap: int = 200) -> List[str]:
-    """ Split PDF document into chunks with overlap for ChromaDB storage."""
-    import PyPDF2
+    """ Split PDF and text documents into chunks with overlap for ChromaDB storage."""
+    import pypdf
     import re
     from pathlib import Path
     
@@ -53,26 +57,35 @@ def chunk_document(file_path: str, chunk_size: int = 1000, overlap: int = 200) -
     
     # Handle single file or directory
     if os.path.isfile(file_path):
-        pdf_files = [file_path]
+        files = [file_path]
     elif os.path.isdir(file_path):
-        pdf_files = list(Path(file_path).glob("*.pdf"))
+        # Support both PDF and text files
+        path_obj = Path(file_path)
+        files = list(path_obj.glob("*.pdf")) + list(path_obj.glob("*.txt"))
     else:
         raise ValueError(f"Path {file_path} is neither a file nor directory")
     
-    for pdf_file in pdf_files:
+    for file in files:
         try:
-            # Extract text from PDF
-            with open(pdf_file, 'rb') as file:
-                pdf_reader = PyPDF2.PdfReader(file)
-                text = ""
-                
-                for page_num, page in enumerate(pdf_reader.pages):
-                    page_text = page.extract_text()
-                    if page_text.strip():  # Only add non-empty pages
-                        text += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
+            text = ""
+            
+            if str(file).endswith('.pdf'):
+                # Extract text from PDF
+                with open(file, 'rb') as f:
+                    pdf_reader = pypdf.PdfReader(f)
+                    
+                    for page_num, page in enumerate(pdf_reader.pages):
+                        page_text = page.extract_text()
+                        if page_text.strip():  # Only add non-empty pages
+                            text += f"\n--- Page {page_num + 1} ---\n{page_text}\n"
+            
+            elif str(file).endswith('.txt'):
+                # Extract text from text file
+                with open(file, 'r', encoding='utf-8') as f:
+                    text = f.read()
             
             if not text.strip():
-                console.print(f"[yellow]Warning: No text extracted from {pdf_file}[/yellow]")
+                console.print(f"[yellow]Warning: No text extracted from {file}[/yellow]")
                 continue
             
             # Clean and normalize text
@@ -119,7 +132,7 @@ def chunk_document(file_path: str, chunk_size: int = 1000, overlap: int = 200) -
                 chunks.append(current_chunk.strip())
                 
         except Exception as e:
-            console.print(f"[red]Error processing {pdf_file}: {str(e)}[/red]")
+            console.print(f"[red]Error processing {file}: {str(e)}[/red]")
             continue
     
     # Filter out very short chunks (likely noise)
@@ -155,6 +168,9 @@ def initialise_system() -> tuple[BaseVectorDBService, RAGContextProvider]:
         console.print("[dim]• Registering context provider with agents...[/dim]")
         query_agent.register_context_provider("rag_context", rag_context)
         qa_agent.register_context_provider("rag_context", rag_context)
+        
+        # Clear any previous session memory
+        shared_memory.clear_memory()
         
         console.print("[bold green]✨ System initialized successfully![/bold green]\n")
         return vector_db, rag_context
@@ -204,7 +220,7 @@ def display_chunks(chunks: List[ChunkItem])->None:
         console.print(chunk_panel)
         console.print()
         
-# For Debug use
+# For Debug use  
 def display_query_info(query_output: RAGQueryAgentOutputSchema)-> None:
     """Display information about the generated query."""
     query_panel = Panel(
@@ -215,31 +231,21 @@ def display_query_info(query_output: RAGQueryAgentOutputSchema)-> None:
     )
     console.print("\n")
     console.print(query_panel)
-    
-    
-# 
-def display_answer(qa_output: RAGQuestionAnsweringAgentOutputSchema) -> None:
-    """Display the reasoning and Socratic response from the teaching agent."""
-    # Display reasoning
-    reasoning_panel = Panel(
-        Markdown(qa_output.reasoning),
-        title="[bold]🤔 Teaching Analysis[/bold]",
+
+def display_tailored_explanation(query_output: RAGQueryAgentOutputSchema) -> None:
+    """Display the tailored explanation from query agent."""
+    explanation_panel = Panel(
+        Markdown(query_output.tailored_explanation),
+        title="[bold]📖 Concept Explanation[/bold]",
         border_style="green",
         padding=(1, 2),
     )
     console.print("\n")
-    console.print(reasoning_panel)
-
-    # Display concept focus
-    concept_panel = Panel(
-        f"[yellow]Focus:[/yellow] {qa_output.concept_focus}",
-        title="[bold]🎯 Causality Concept[/bold]",
-        border_style="yellow",
-        padding=(1, 2),
-    )
-    console.print("\n")
-    console.print(concept_panel)
-
+    console.print(explanation_panel)
+    
+# 
+def display_socratic_response(qa_output: RAGQuestionAnsweringAgentOutputSchema) -> None:
+    """Display the Socratic response from the teaching agent."""
     # Display Socratic response
     socratic_panel = Panel(
         Markdown(qa_output.socratic_response),
@@ -250,77 +256,203 @@ def display_answer(qa_output: RAGQuestionAnsweringAgentOutputSchema) -> None:
     console.print("\n")
     console.print(socratic_panel)
     
+    # Display understanding assessment
+    assessment_color = {
+        "developing": "red",
+        "partial": "yellow", 
+        "good": "green",
+        "excellent": "bright_green"
+    }.get(qa_output.understanding_assessment, "white")
+    
+    assessment_panel = Panel(
+        f"[{assessment_color}]Understanding Level: {qa_output.understanding_assessment.title()}[/{assessment_color}]",
+        title="[bold]📊 Learning Assessment[/bold]",
+        border_style=assessment_color,
+        padding=(1, 2),
+    )
+    console.print("\n")
+    console.print(assessment_panel)
+
+def display_session_summary(qa_output: RAGQuestionAnsweringAgentOutputSchema) -> None:
+    """Display the final session summary."""
+    if qa_output.session_summary:
+        summary_panel = Panel(
+            Markdown(qa_output.session_summary),
+            title="[bold]🎓 Learning Session Summary[/bold]",
+            border_style="bright_green",
+            padding=(1, 2),
+        )
+        console.print("\n")
+        console.print(summary_panel)
+    
 
 
-def chat_loop(vector_db: BaseVectorDBService, rag_context: RAGContextProvider) -> None:
-    """Main chat loop."""
+def welcome_and_profile_user() -> bool:
+    """Welcome user and collect their profile. Returns True if profiling is complete."""
     display_welcome()
 
     while True:
         try:
-            user_message = console.input("\n[bold blue]Your question:[/bold blue] ").strip()
+            user_response = console.input("\n[bold blue]Tell me about yourself:[/bold blue] ").strip()
 
-            if user_message.lower() in ["/exit", "/quit"]:
-                console.print("\n[bold]👋 Goodbye! Thanks for using the RAG Chatbot.[/bold]")
-                break
+            if user_response.lower() in ["/exit", "/quit"]:
+                return False
 
+            # Check if user selected an example
             try:
-                i_question = int(user_message) - 1
-                if 0 <= i_question < len(STARTER_EXAMPLES):
-                    user_message = STARTER_EXAMPLES[i_question]
+                i_example = int(user_response) - 1
+                if 0 <= i_example < len(STARTER_EXAMPLES):
+                    user_response = STARTER_EXAMPLES[i_example]
             except ValueError:
                 pass
 
             console.print("\n" + "─" * 80)
-            console.print("\n[bold magenta]🔄 Processing your question...[/bold magenta]")
+            console.print("\n[bold magenta]🔄 Processing your profile...[/bold magenta]")
 
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console,
-            ) as progress:
-                # Generate search query
-                task = progress.add_task("[cyan]Generating semantic search query...", total=None)
-                query_output = query_agent.run(RAGQueryAgentInputSchema(concept=user_message))
+            # Create a simple user profile from the response
+            user_profile = {
+                "background": user_response,
+                "learning_goals": "Learn causality concepts",
+                "experience_level": "beginner"  # Default assumption
+            }
+
+            # Display personalized welcome
+            welcome_message = f"Welcome! I understand you'd like to learn about causality. Based on your background: '{user_response}', I'll tailor the explanations to your level and interests."
+            welcome_panel = Panel(
+                Markdown(welcome_message),
+                title="[bold]🤗 Personalized Welcome[/bold]",
+                border_style="green",
+                padding=(1, 2),
+            )
+            console.print("\n")
+            console.print(welcome_panel)
+
+            # Update shared memory with user profile
+            shared_memory.update_user_profile(user_profile)
+            shared_memory.add_conversation_entry("system", user_response, welcome_message)
+
+            console.print("\n[bold green]✨ Great! Let's start your causality learning journey![/bold green]")
+            return True
+
+        except Exception as e:
+            console.print(f"\n[bold red]Error:[/bold red] {str(e)}")
+            console.print("[dim]Please try again or type 'exit' to quit.[/dim]")
+
+
+def learning_loop(vector_db: BaseVectorDBService, rag_context: RAGContextProvider) -> None:
+    """Main learning loop with concept explanation and Socratic dialogue."""
+    user_profile = shared_memory.get_user_profile()
+    
+    while True:
+        try:
+            # Get the topic user wants to learn
+            if not shared_memory.get_current_topic():
+                topic = console.input("\n[bold blue]What causality concept would you like to explore?[/bold blue] ").strip()
+                if topic.lower() in ["/exit", "/quit"]:
+                    break
+                shared_memory.set_current_topic(topic)
+            else:
+                topic = shared_memory.get_current_topic()
+            
+            console.print("\n" + "─" * 80)
+            console.print("\n[bold magenta]🔄 Phase 1: Retrieving and explaining the concept...[/bold magenta]")
+            
+            with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
+                # Phase 1: Query agent provides tailored explanation
+                task = progress.add_task("[cyan]Generating semantic search and explanation...", total=None)
+                query_output = query_agent.run(RAGQueryAgentInputSchema(
+                    concept=topic,
+                    user_profile=user_profile
+                ))
                 progress.remove_task(task)
-
-                # Display query information
-                display_query_info(query_output)
-
+                
                 # Perform vector search
                 task = progress.add_task("[cyan]Searching knowledge base...", total=None)
                 search_results = vector_db.query(query_text=query_output.query, n_results=int(os.getenv("NUM_CHUNKS_TO_RETRIEVE", 5)))
-
+                
                 # Update context with retrieved chunks
                 rag_context.chunks = [
                     ChunkItem(content=doc, metadata={"chunk_id": id, "distance": dist})
                     for doc, id, dist in zip(search_results["documents"], search_results["ids"], search_results["distance"])
                 ]
                 progress.remove_task(task)
-
-                # Display retrieved chunks
-                display_chunks(rag_context.chunks)
-
-                # Generate answer
-                task = progress.add_task("[cyan]Analyzing chunks and generating answer...", total=None)
-                qa_output = qa_agent.run(RAGQuestionAnsweringAgentInputSchema(question=user_message))
-                progress.remove_task(task)
-
-                # Display answer
-                display_answer(qa_output)
-
+            
+            # Display the tailored explanation
+            display_tailored_explanation(query_output)
+            shared_memory.add_conversation_entry("query_agent", topic, query_output.tailored_explanation)
+            
+            # Phase 2: Start Socratic dialogue
+            console.print("\n[bold magenta]🔄 Phase 2: Socratic dialogue session...[/bold magenta]")
+            shared_memory.start_qa_session(query_output.concept_category)
+            
+            # Socratic dialogue loop
+            while True:
+                try:
+                    qa_session = shared_memory.get_qa_session()
+                    conversation_history = [item["response"] for item in qa_session.get("student_responses", [])]
+                    
+                    # Get QA agent response
+                    qa_output = qa_agent.run(RAGQuestionAnsweringAgentInputSchema(
+                        question=topic if qa_session["question_count"] == 0 else "Continue dialogue",
+                        user_profile=user_profile,
+                        concept_explanation=query_output.tailored_explanation,
+                        conversation_history=conversation_history
+                    ))
+                    
+                    # Display Socratic response
+                    display_socratic_response(qa_output)
+                    
+                    if not qa_output.continue_dialogue:
+                        # Session complete - display summary
+                        display_session_summary(qa_output)
+                        shared_memory.end_qa_session(qa_output.understanding_assessment, qa_output.session_summary)
+                        break
+                    
+                    # Get student response
+                    student_response = console.input("\n[bold blue]Your response:[/bold blue] ").strip()
+                    
+                    if student_response.lower() in ["/exit", "/quit"]:
+                        return
+                    
+                    # Record the Q&A interaction
+                    shared_memory.add_qa_interaction(qa_output.socratic_response, student_response)
+                    shared_memory.add_conversation_entry("qa_agent", student_response, qa_output.socratic_response)
+                    
+                except Exception as e:
+                    console.print(f"\n[bold red]Error in dialogue:[/bold red] {str(e)}")
+                    break
+            
+            # Ask if user wants to learn another concept
             console.print("\n" + "─" * 80)
-
+            continue_learning = console.input("\n[bold green]Would you like to explore another causality concept? (y/n):[/bold green] ").strip().lower()
+            
+            if continue_learning not in ['y', 'yes']:
+                break
+            else:
+                shared_memory.set_current_topic("")  # Reset topic for next round
+                
         except Exception as e:
             console.print(f"\n[bold red]Error:[/bold red] {str(e)}")
             console.print("[dim]Please try again or type 'exit' to quit.[/dim]")
+
+
+def main_workflow(vector_db: BaseVectorDBService, rag_context: RAGContextProvider) -> None:
+    """Main workflow following the planned architecture."""
+    # Phase 0: Welcome and profile user
+    if not welcome_and_profile_user():
+        return
+    
+    # Phase 1 & 2: Learning loop with concept explanation and Socratic dialogue
+    learning_loop(vector_db, rag_context)
+    
+    console.print("\n[bold]🎓 Thank you for using EducAgent! Your learning progress has been saved.[/bold]")
             
             
 if __name__ == "__main__":
     try:
         vector_db, rag_context = initialise_system()
-        chat_loop(vector_db, rag_context)
+        main_workflow(vector_db, rag_context)
     except KeyboardInterrupt:
-        console.print("\n[bold]👋 Goodbye! Thanks for using the RAG Chatbot.[/bold]")
+        console.print("\n[bold]👋 Goodbye! Thanks for using EducAgent.[/bold]")
     except Exception as e:
         console.print(f"\n[bold red]Fatal error:[/bold red] {str(e)}")

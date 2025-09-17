@@ -33,7 +33,6 @@ class ChromaDBService(BaseVectorDBService):
             persist_directory (str, optional): Directory to persist ChromaDB data. Defaults to "./chroma_db".
             recreate_collection (bool, optional): If True, deltes the collection if it exists before creating. Defaults to False.
         """
-        
         # Initialise embedding function with OpenAI
         self.embedding_function = OpenAIEmbeddingFunction(
             api_key=os.getenv("OPENAI_API_KEY"),
