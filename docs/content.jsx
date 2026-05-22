@@ -175,7 +175,7 @@ const LEARNER0_LESSONS = [
 const COURSE_CONFIGS = {
   learner_0: {
     learnerId: 'learner_0',
-    label: 'learner_0',
+    label: 'For everyone',
     profile: 'PUBLIC-BEG',
     courseTitle: 'Interventions',
     courseKicker: 'Public beginner lesson',
@@ -185,7 +185,7 @@ const COURSE_CONFIGS = {
   },
   learner_1: {
     learnerId: 'learner_1',
-    label: 'learner_1',
+    label: 'CS student',
     profile: 'CS-ML-BEG',
     courseTitle: 'Directed Acyclic Graph (DAG)',
     courseKicker: 'CS / ML beginner shell',

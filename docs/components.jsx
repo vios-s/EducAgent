@@ -221,6 +221,8 @@ function NavItem({ item, active, collapsed, onClick }) {
 
 // ---------- Top bar ----------
 function TopBar({ course, selectedLearner, nextLearner, onSwitchLearner, onGoHome, loading }) {
+  const currentLabel = COURSE_CONFIGS[selectedLearner]?.label || selectedLearner;
+  const nextLabel = COURSE_CONFIGS[nextLearner]?.label || nextLearner;
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 20,
@@ -264,8 +266,8 @@ function TopBar({ course, selectedLearner, nextLearner, onSwitchLearner, onGoHom
           border: '1px solid var(--ink)',
           color: '#fff',
           opacity: loading ? 0.72 : 1,
-        }} onClick={onSwitchLearner} disabled={loading} title={`Switch learner preview (${selectedLearner} to ${nextLearner})`} aria-label={`Switch learner preview from ${selectedLearner} to ${nextLearner}`}>
-          <Icon.Switch size={18}/>
+        }} onClick={onSwitchLearner} disabled={loading} title={`Switch learning profile (${currentLabel} to ${nextLabel})`} aria-label={`Switch learning profile from ${currentLabel} to ${nextLabel}`}>
+          <i className="fa-solid fa-user-graduate" aria-hidden="true" style={{ fontSize: 17, lineHeight: 1 }}/>
         </button>
       </div>
     </header>

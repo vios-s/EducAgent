@@ -1,46 +1,30 @@
-# EducAgent — GitHub Pages Learner Preview
+# EducAgent Demo App
 
-A static GitHub Pages preview that reuses the `design/educagent-ui` visual system and ships learner course data from `data/`.
+This folder contains the static EducAgent demo served on GitHub Pages.
 
-## Quick start
+The demo is designed for CHAI Fest visitors and other public audiences who may be new to causality. It presents causal thinking through stories, visuals, and quick checks rather than technical notation first.
 
-Serve this folder with any static server and open `index.html`.
+## Demo Highlights
 
-```bash
-cd docs
-python -m http.server 8080
-```
+- Public homepage introducing EducAgent as a low-barrier causality tutor.
+- Study Mode for guided learning.
+- Two audience profiles:
+  - **For everyone**: a beginner lesson built around the tutoring puzzle.
+  - **CS student**: a DAG course shell for learners with a computing background.
+- Mobile-friendly lesson layout and homepage sections.
+- Project links for @VIOS Group at the University of Edinburgh and CHAI funding support.
 
-Then visit `http://localhost:8080`.
+## Demo URL
 
-## File map
+[https://vios-s.github.io/EducAgent/](https://vios-s.github.io/EducAgent/)
 
-- `index.html`        — Entry point, theme tokens, fonts, root mount
-- `app.jsx`           — Main App: public homepage, content-only lesson view, learner switcher wiring
-- `components.jsx`    — TopBar, Logo, FormattedText (inline md)
-- `quiz.jsx`          — InteractiveQuiz component (states: default / picked / correct / wrong + explanation)
-- `content.jsx`       — learner_0 structured content plus learner_1 DAG loader/transform
-- `icons.jsx`         — Lucide-style inline SVG icon set
-- `assets/educagent-logo.png` — Generated EducAgent logo mark
-- `assets/homepage-hero.png` — Generated public-facing homepage illustration
-- `data/`             — Copied GitHub Pages data payloads for learner_0 and learner_1
+## Main Files
 
-## Tokens & theming
-
-CSS custom properties live in `index.html` under `:root`.
-Alternate palettes are toggled via `data-theme="meadow|bluebird|berry"` on `<html>`.
-
-## Porting back to Next.js / Tailwind
-
-The visual system is token-based, so it ports cleanly:
-- Move the `:root` palette + radius/shadow tokens into `globals.css` (or extend Tailwind theme).
-- Re-implement `Sidebar`, `TopBar`, `LessonHero`, `InteractiveQuiz`, `CausalGraph`,
-  `ObjectivesBlock`, `VariableCards`, `RoadsBlock`, `CalloutBlock`, `Figure`, `CodeBox`
-  as Next.js client components (1:1 mapping from these JSX files).
-- The content blocks in `content.jsx` can be generated from your existing markdown
-  provider — just emit `{kind, ...}` instead of raw md.
-
-## Fonts
-
-- `Bricolage Grotesque` (display) + `Lexend` (body) + `JetBrains Mono` (code).
-  Loaded via Google Fonts in `index.html`.
+- `index.html` - page metadata, theme tokens, font loading, and script bootstrapping.
+- `app.jsx` - homepage, lesson view, audience-profile switching, and project links.
+- `content.jsx` - course configuration and lesson content loading.
+- `components.jsx` - shared interface pieces such as the top bar, logo, and text formatting.
+- `quiz.jsx` - interactive understanding checks.
+- `icons.jsx` - local inline icon set.
+- `assets/` - generated logo, social preview, teaser images, QR codes, and site imagery.
+- `data/` - copied learner content used by the static demo.

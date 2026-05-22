@@ -9,12 +9,12 @@ EducAgent is a learner-facing demo that makes causality feel approachable. It in
 - A friendly homepage for a broad public audience: anyone should be able to understand the promise without already knowing causal inference.
 - A mobile-first learning experience with compact navigation, responsive lesson layouts, and visual lesson headers.
 - Study Mode as the main path into causality basics.
-- A learner switch in the top-right corner for previewing different learning tracks.
-- Partner links and QR codes for VIOS Group and CHAI at the bottom of the homepage.
+- A learning-profile switch in the top-right corner for previewing different audience tracks.
+- Project and funding links with QR codes for VIOS Group and CHAI at the bottom of the homepage.
 
 ## Learning Paths
 
-### learner_0: The Tutoring Puzzle
+### For everyone: The Tutoring Puzzle
 
 The first learner path asks a familiar question:
 
@@ -22,7 +22,7 @@ The first learner path asks a familiar question:
 
 The lesson introduces the difference between seeing a pattern and proving a cause. It uses a tutoring story to explain why groups may already be different before an intervention, and why random assignment can help us test causal claims more carefully.
 
-### learner_1: Directed Acyclic Graph (DAG)
+### CS student: Directed Acyclic Graph (DAG)
 
 The second learner path currently provides the shell for a DAG-focused course. It previews the structure for learning causal graphs, including nodes, arrows, paths, and why causal graphs cannot loop.
 
@@ -38,10 +38,10 @@ This is an early public-facing prototype, not a full course platform yet. The cu
 
 Future features marked as **coming soon** on the homepage, such as hidden-path guidance and team-based learning, are intentionally shown as upcoming capabilities.
 
-## Partners
+## Project Links
 
-- [VIOS Group](https://vios.science/) - AI for Life Sciences
-- [CHAI](https://www.chai.ac.uk/) - Causality in Healthcare AI
+- [VIOS Group](https://vios.science/) - University of Edinburgh
+- [CHAI](https://www.chai.ac.uk/) - Funded by CHAI
 
 ## Repository Notes
 

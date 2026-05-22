@@ -1297,8 +1297,9 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
 
 const PARTNER_LINKS = [
   {
-    name: 'VIOS Group',
-    label: 'AI for Life Sciences',
+    name: '@VIOS Group',
+    label: 'University of Edinburgh',
+    role: 'Project team',
     url: 'https://vios.science/',
     logo: 'assets/vios-logo.png',
     qr: 'assets/qr-vios.png',
@@ -1307,7 +1308,8 @@ const PARTNER_LINKS = [
   },
   {
     name: 'CHAI',
-    label: 'Causality in Healthcare AI',
+    label: 'Funded by CHAI',
+    role: 'Funding support',
     url: 'https://www.chai.ac.uk/',
     logo: 'assets/chai-logo.png',
     qr: 'assets/qr-chai.png',
@@ -1325,8 +1327,8 @@ function PartnerLinksSection() {
     }}>
       <HomeSectionHeader
         eyebrow="Project links"
-        title="Follow the groups behind EducAgent."
-        text="Open the partner sites here, or scan the QR codes when you want to continue from your phone."
+        title="From @VIOS Group, funded by CHAI."
+        text="EducAgent is developed by @VIOS Group at the University of Edinburgh, with support from CHAI. Open the sites here, or scan the QR codes from your phone."
       />
       <div style={{
         display: 'grid',
@@ -1390,7 +1392,7 @@ function PartnerLinksSection() {
                 marginBottom: 8,
               }}>
                 <Icon.Globe size={14}/>
-                Partner site
+                {partner.role}
               </div>
               <h3 style={{
                 fontFamily: 'var(--font-display)',
