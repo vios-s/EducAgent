@@ -1256,7 +1256,7 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
       </section>
 
       <section style={{
-        padding: '34px clamp(20px, 5vw, 64px) 60px',
+        padding: '34px clamp(20px, 5vw, 64px) 44px',
         background: 'linear-gradient(180deg, var(--surface), var(--bg-soft))',
       }}>
         <HomeSectionHeader
@@ -1289,7 +1289,156 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
           />
         </div>
       </section>
+
+      <PartnerLinksSection />
     </div>
+  );
+}
+
+const PARTNER_LINKS = [
+  {
+    name: 'VIOS Group',
+    label: 'AI for Life Sciences',
+    url: 'https://vios.science/',
+    logo: 'assets/vios-logo.png',
+    qr: 'assets/qr-vios.png',
+    tone: 'var(--accent)',
+    wash: 'var(--accent-soft)',
+  },
+  {
+    name: 'CHAI',
+    label: 'Causality in Healthcare AI',
+    url: 'https://www.chai.ac.uk/',
+    logo: 'assets/chai-logo.png',
+    qr: 'assets/qr-chai.png',
+    tone: 'var(--primary)',
+    wash: 'var(--primary-soft)',
+  },
+];
+
+function PartnerLinksSection() {
+  return (
+    <section style={{
+      padding: '42px clamp(20px, 5vw, 64px) 64px',
+      background: 'var(--surface)',
+      borderTop: '1px solid var(--line-soft)',
+    }}>
+      <HomeSectionHeader
+        eyebrow="Project links"
+        title="Follow the groups behind EducAgent."
+        text="Open the partner sites here, or scan the QR codes when you want to continue from your phone."
+      />
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: 14,
+        marginTop: 24,
+      }}>
+        {PARTNER_LINKS.map((partner) => (
+          <a
+            key={partner.name}
+            href={partner.url}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) auto',
+              gap: 18,
+              alignItems: 'center',
+              minHeight: 178,
+              padding: 18,
+              borderRadius: 8,
+              border: '1px solid var(--line)',
+              background: `linear-gradient(135deg, ${partner.wash}, var(--surface) 44%, var(--surface))`,
+              boxShadow: 'var(--shadow-sm)',
+              textDecoration: 'none',
+              color: 'var(--ink)',
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div style={{
+                width: 88,
+                height: 54,
+                display: 'grid',
+                placeItems: 'center',
+                borderRadius: 8,
+                background: 'rgba(255,255,255,0.78)',
+                border: '1px solid var(--line-soft)',
+                marginBottom: 16,
+                padding: 8,
+              }}>
+                <img
+                  src={partner.logo}
+                  alt={`${partner.name} logo`}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                  }}
+                />
+              </div>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                color: partner.tone,
+                fontSize: 12,
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                marginBottom: 8,
+              }}>
+                <Icon.Globe size={14}/>
+                Partner site
+              </div>
+              <h3 style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 26,
+                lineHeight: 1.05,
+                margin: 0,
+              }}>{partner.name}</h3>
+              <p style={{
+                margin: '8px 0 14px',
+                color: 'var(--ink-soft)',
+                fontSize: 14.5,
+                lineHeight: 1.45,
+              }}>{partner.label}</p>
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                fontWeight: 800,
+                color: 'var(--ink)',
+                fontSize: 14,
+              }}>
+                Open website <Icon.ArrowR size={14}/>
+              </span>
+            </div>
+            <div style={{
+              width: 112,
+              height: 112,
+              padding: 8,
+              borderRadius: 8,
+              background: '#fff',
+              border: '1px solid var(--line-soft)',
+              boxShadow: '0 10px 22px rgba(42,31,20,0.06)',
+            }}>
+              <img
+                src={partner.qr}
+                alt={`QR code for ${partner.name}`}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                }}
+              />
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
   );
 }
 
