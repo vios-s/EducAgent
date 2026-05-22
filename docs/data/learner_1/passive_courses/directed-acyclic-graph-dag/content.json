@@ -1,0 +1,749 @@
+{
+  "cache_key": "directed-acyclic-graph-dag:CS-ML-BEG",
+  "concept_id": "directed-acyclic-graph-dag",
+  "profile_sig": "CS-ML-BEG",
+  "outline": [
+    {
+      "title": "Nodes, Edges, and Causal Direction",
+      "summary": "Introduce the idea of representing variables as nodes and direct causal influences as directed edges, establishing why direction matters for causal reasoning in ML systems.",
+      "rag_focus": "Section 6.1 graph terminology: nodes, edges, parent, child, adjacency definitions.",
+      "anchor_use": "Introduce all four anchor variables as nodes and draw the five directed edges of the hiring-pipeline DAG, labelling each edge with its causal meaning (e.g. TechnicalSkill -> ProjectPortfolio means skill causally produces portfolio quality).",
+      "new_key_terms": [
+        "node",
+        "directed edge"
+      ],
+      "target_misconception": "CS students familiar with undirected graphs or correlation matrices often treat edges as symmetric relationships, not distinguishing 'X influences Y' from 'Y influences X'.",
+      "anchor_mode": "reuse_anchor",
+      "changed_assumptions": [],
+      "must_preserve_edges": [
+        "UniversityPrestige (Z) -> TechnicalSkill (X)",
+        "UniversityPrestige (Z) -> HiringRecommendation (Y)",
+        "TechnicalSkill (X) -> ProjectPortfolio (M)",
+        "TechnicalSkill (X) -> HiringRecommendation (Y)",
+        "ProjectPortfolio (M) -> HiringRecommendation (Y)"
+      ],
+      "variant_explanation_required": false
+    },
+    {
+      "title": "Parents, Children, and Directed Paths",
+      "summary": "Define parent, child, ancestor, and descendant relationships and show how tracing directed paths through the graph reveals chains of causal influence.",
+      "rag_focus": "Section 6.1: parent, child, directed path, ancestor, descendant definitions.",
+      "anchor_use": "Use the anchor DAG to identify the parents of HiringRecommendation, trace the directed path UniversityPrestige -> TechnicalSkill -> ProjectPortfolio -> HiringRecommendation, and label TechnicalSkill as both a child of UniversityPrestige and an ancestor of HiringRecommendation.",
+      "new_key_terms": [
+        "parent",
+        "ancestor"
+      ],
+      "target_misconception": "Students often assume that if variable A is connected to variable Y by any path, A must be a direct cause of Y, conflating indirect causal paths with direct edges.",
+      "anchor_mode": "reuse_anchor",
+      "changed_assumptions": [],
+      "must_preserve_edges": [
+        "UniversityPrestige (Z) -> TechnicalSkill (X)",
+        "UniversityPrestige (Z) -> HiringRecommendation (Y)",
+        "TechnicalSkill (X) -> ProjectPortfolio (M)",
+        "TechnicalSkill (X) -> HiringRecommendation (Y)",
+        "ProjectPortfolio (M) -> HiringRecommendation (Y)"
+      ],
+      "variant_explanation_required": false
+    },
+    {
+      "title": "Acyclicity and Why Causal Graphs Cannot Loop",
+      "summary": "Explain the acyclicity constraint, show what a cycle would mean causally, and confirm that the hiring-pipeline DAG satisfies the DAG definition.",
+      "rag_focus": "Section 6.1 definition of DAG vs PDAG; Section 6.2 note that SCM graphs are assumed acyclic.",
+      "anchor_use": "Verify that no directed path in the anchor DAG returns to its starting node, then illustrate why adding a forbidden edge such as HiringRecommendation -> TechnicalSkill in the same snapshot would create a cycle and violate the static-model assumption.",
+      "new_key_terms": [
+        "directed acyclic graph",
+        "cycle"
+      ],
+      "target_misconception": "ML students accustomed to recurrent neural networks or feedback control systems assume that cycles in a graph are natural and unproblematic, not recognising that a same-time-slice cycle makes causal ordering undefined.",
+      "anchor_mode": "local_variant",
+      "changed_assumptions": [
+        "Temporarily add the forbidden edge HiringRecommendation (Y) -> TechnicalSkill (X) to show what a cycle looks like, then remove it and restore the base anchor."
+      ],
+      "must_preserve_edges": [
+        "UniversityPrestige (Z) -> TechnicalSkill (X)",
+        "UniversityPrestige (Z) -> HiringRecommendation (Y)",
+        "TechnicalSkill (X) -> ProjectPortfolio (M)",
+        "TechnicalSkill (X) -> HiringRecommendation (Y)",
+        "ProjectPortfolio (M) -> HiringRecommendation (Y)"
+      ],
+      "variant_explanation_required": true
+    },
+    {
+      "title": "Structural Assignments: Each Variable Has a Causal Recipe",
+      "summary": "Connect the DAG to the structural causal model (SCM) idea that each node is determined by a function of its parents plus noise, giving the graph its generative meaning.",
+      "rag_focus": "Section 6.2: SCM definition, structural assignments X_j := f_j(PA_j, N_j), and how the graph is read off from those assignments.",
+      "anchor_use": "Write informal structural assignments for each anchor variable (e.g. HiringRecommendation := f(TechnicalSkill, ProjectPortfolio, UniversityPrestige, noise)) and show that the parent set of each node in the DAG is exactly the set of variables appearing on the right-hand side of its assignment.",
+      "new_key_terms": [
+        "structural assignment",
+        "noise term"
+      ],
+      "target_misconception": "Students familiar with regression models often interpret a structural equation as just a statistical fit, not as a claim about which variables would change Y if we intervened on them.",
+      "anchor_mode": "reuse_anchor",
+      "changed_assumptions": [],
+      "must_preserve_edges": [
+        "UniversityPrestige (Z) -> TechnicalSkill (X)",
+        "UniversityPrestige (Z) -> HiringRecommendation (Y)",
+        "TechnicalSkill (X) -> ProjectPortfolio (M)",
+        "TechnicalSkill (X) -> HiringRecommendation (Y)",
+        "ProjectPortfolio (M) -> HiringRecommendation (Y)"
+      ],
+      "variant_explanation_required": false
+    }
+  ],
+  "anchor_case": {
+    "scenario": "A CS student studying ML fairness wants to understand whether a resume-screening algorithm's decision is causally driven by an applicant's technical skill or whether it is partly explained by the applicant's university prestige, which also correlates with skill.",
+    "variables": {
+      "UniversityPrestige": {
+        "role": "confounder",
+        "description": "Selectivity tier of the applicant's undergraduate institution, which influences both measured skill signals and the algorithm's hiring recommendation."
+      },
+      "TechnicalSkill": {
+        "role": "treatment",
+        "description": "Applicant's demonstrated programming and problem-solving ability, as measured by coding assessments."
+      },
+      "HiringRecommendation": {
+        "role": "outcome",
+        "description": "Binary output of the resume-screening model indicating whether the applicant is recommended for an interview."
+      },
+      "ProjectPortfolio": {
+        "role": "mediator",
+        "description": "Quality and quantity of the applicant's public coding projects, which is caused by TechnicalSkill and in turn influences HiringRecommendation."
+      }
+    },
+    "letter_map": {
+      "UniversityPrestige": "Z",
+      "TechnicalSkill": "X",
+      "ProjectPortfolio": "M",
+      "HiringRecommendation": "Y"
+    },
+    "causal_edges": [
+      "UniversityPrestige (Z) -> TechnicalSkill (X)",
+      "UniversityPrestige (Z) -> HiringRecommendation (Y)",
+      "TechnicalSkill (X) -> ProjectPortfolio (M)",
+      "TechnicalSkill (X) -> HiringRecommendation (Y)",
+      "ProjectPortfolio (M) -> HiringRecommendation (Y)"
+    ],
+    "forbidden_edges": [
+      "HiringRecommendation (Y) -> TechnicalSkill (X) in the same snapshot",
+      "HiringRecommendation (Y) -> UniversityPrestige (Z) in the same snapshot",
+      "ProjectPortfolio (M) -> TechnicalSkill (X)"
+    ],
+    "simplifying_assumptions": [
+      "Use a single static snapshot of one application round; feedback from hiring outcomes to future skill development or university reputation is excluded and would require time-indexed variables.",
+      "UniversityPrestige is treated as a pre-existing attribute, not as a variable the algorithm can manipulate.",
+      "Same-time-slice feedback loops are excluded; the DAG represents a single causal ordering within one hiring cycle."
+    ],
+    "alternative_illustrations": [
+      "A content-recommendation pipeline where user engagement history (confounder) affects both the features fed to the model and the click outcome, illustrating the same fork structure.",
+      "A loan-approval model where income mediates the effect of education level on approval probability."
+    ],
+    "rationale": "Resume screening is a canonical ML fairness scenario that CS students encounter directly, making the causal structure immediately recognisable; the graph is rich enough to illustrate nodes, edges, directed paths, ancestors/descendants, and acyclicity without requiring domain knowledge outside the learner's existing ML background.",
+    "anchor_plausibility_check": {
+      "would_an_expert_accept": true,
+      "role_scope_match": "A student studying ML fairness would routinely audit or critique automated hiring pipelines as a core case study, and reasoning about what the model's output causally depends on is exactly the kind of analysis such a student performs.",
+      "magnitudes_reasonable": "A four-variable DAG with five edges is a realistic minimal causal graph for a hiring pipeline audit and is well within the scope of a beginner causal-inference exercise.",
+      "most_likely_expert_objection": "An expert might note that university prestige does not directly cause the model's output unless the model was trained on prestige-correlated features; the anchor mitigates this by treating UniversityPrestige as influencing HiringRecommendation through the training-data distribution, which is a standard fairness framing."
+    },
+    "domain_assumptions_used": [
+      "Assumes the screening model was trained on historical data in which university prestige correlates with hiring outcomes, so prestige has a residual influence on the model's output.",
+      "Assumes TechnicalSkill is partially but not perfectly captured by the model's input features, leaving room for prestige to act as an independent path.",
+      "Assumes ProjectPortfolio is observable as a feature in the model's input and is causally downstream of TechnicalSkill."
+    ],
+    "anchor_invariants": {
+      "direct_edges": [
+        "UniversityPrestige -> TechnicalSkill",
+        "UniversityPrestige -> HiringRecommendation",
+        "TechnicalSkill -> ProjectPortfolio",
+        "TechnicalSkill -> HiringRecommendation",
+        "ProjectPortfolio -> HiringRecommendation"
+      ],
+      "children": {
+        "HiringRecommendation": [],
+        "ProjectPortfolio": [
+          "HiringRecommendation"
+        ],
+        "TechnicalSkill": [
+          "HiringRecommendation",
+          "ProjectPortfolio"
+        ],
+        "UniversityPrestige": [
+          "HiringRecommendation",
+          "TechnicalSkill"
+        ]
+      },
+      "parents": {
+        "HiringRecommendation": [
+          "ProjectPortfolio",
+          "TechnicalSkill",
+          "UniversityPrestige"
+        ],
+        "ProjectPortfolio": [
+          "TechnicalSkill"
+        ],
+        "TechnicalSkill": [
+          "UniversityPrestige"
+        ],
+        "UniversityPrestige": []
+      },
+      "sources": [
+        "UniversityPrestige"
+      ],
+      "sinks": [
+        "HiringRecommendation"
+      ]
+    },
+    "anchor_schema_repairs": []
+  },
+  "nodes": [
+    {
+      "node_title": "Nodes, Edges, and Causal Direction",
+      "sections": [
+        {
+          "section": "What Does Direction Have to Do With Fairness?",
+          "content": "> **After this section, you'll be able to:**\n> 1. Explain what nodes and directed edges represent in a causal graph.\n> 2. Describe why the direction of an edge matters — and why flipping it changes the meaning entirely.\n> 3. Identify the nodes, edges, parents, and children in the hiring-pipeline DAG.\n\n[CONTEXT_IMAGE: Layout: 16:9 wide scene. A software engineer sits at a desk reviewing a resume-screening dashboard on a large monitor, with a flowchart of applicant attributes visible on screen; the scene fills the frame with clear labels on each panel element and minimal empty background.]\n\nImagine you are auditing a resume-screening algorithm used to shortlist engineering candidates. The model flags some applicants and skips others. A colleague says: \"University prestige correlates with getting flagged — is the model being fair?\" Before you can answer, you need a way to represent *who is influencing whom*. That is exactly what a causal graph gives you.",
+          "markers": [
+            "[CONTEXT_IMAGE: Layout: 16:9 wide scene. A software engineer sits at a desk reviewing a resume-screening dashboard on a large monitor, with a flowchart of applicant attributes visible on screen; the scene fills the frame with clear labels on each panel element and minimal empty background.]"
+          ],
+          "part": "hook"
+        },
+        {
+          "section": "Before We Dive In",
+          "content": "> You might be thinking: \"An edge between two variables just means they're related — like a correlation or an undirected link in a graph.\" That intuition is natural if you've worked with adjacency matrices or undirected graphs in algorithms courses, where an edge between $A$ and $B$ is the same as an edge between $B$ and $A$. But in causal graphs, direction is everything. An arrow from $A$ to $B$ means $A$ influences $B$ — not the other way around. Flipping the arrow tells a completely different causal story, and the two stories lead to different decisions. We'll see exactly why that matters in the hiring example below.",
+          "markers": [],
+          "part": "recall"
+        },
+        {
+          "section": "The Big Idea: Arrows That Tell a Story",
+          "content": "Think of a causal graph like a wiring diagram for a system. Each component in the system is a **node** — a variable whose value can change — and each wire connecting two components is a **directed edge**, an arrow that says \"this component's value shapes that one's value\" (Source: ECI).\n\nIn an undirected graph, a wire between two components just says they are connected. In a causal graph, the wire has a plug end and a socket end. The plug end is the cause; the socket end is the effect. Swap them and you've described a completely different machine.\n\nLet's build the hiring-pipeline DAG step by step.\n\n**Step 1 — Identify the nodes.**\n\nWe have four variables in our resume-screening scenario:\n\n| Node | Plain-English meaning | Letter |\n|---|---|---|\n| UniversityPrestige | Selectivity tier of the applicant's undergraduate institution | $Z$ |\n| TechnicalSkill | Demonstrated programming and problem-solving ability | $X$ |\n| ProjectPortfolio | Quality and quantity of public coding projects | $M$ |\n| HiringRecommendation | Binary output: recommended for interview or not | $Y$ |\n\n**Step 2 — Draw the directed edges.**\n\nNow we connect the nodes with arrows, each one representing a direct causal influence (Source: ECI):\n\n1. **UniversityPrestige (confounder $Z$)** shapes **TechnicalSkill (treatment $X$)**: attending a more selective institution influences how much programming ability an applicant develops.\n2. **UniversityPrestige (confounder $Z$)** also shapes **HiringRecommendation (outcome $Y$)**: because the model was trained on historical data where prestige correlates with hiring, prestige has a residual path to the model's output that bypasses skill entirely.\n3. **TechnicalSkill (treatment $X$)** shapes **ProjectPortfolio (mediator $M$)**: stronger programmers build richer public portfolios.\n4. **TechnicalSkill (treatment $X$)** shapes **HiringRecommendation (outcome $Y$)**: skill directly influences the model's recommendation through coding-assessment features.\n5. **ProjectPortfolio (mediator $M$)** shapes **HiringRecommendation (outcome $Y$)**: the portfolio is an observable feature the model reads and uses.\n\n*Note: this is a single static snapshot of one hiring cycle. Any feedback from hiring outcomes back to future skill development or university reputation would require time-indexed variables and is excluded here.*\n\n**Step 3 — Name the family relationships.**\n\nOnce you have arrows, you can talk about **parents** and **children** — the formal names for direct causes and direct effects in a causal graph (Source: ECI). A node $i$ is a parent of node $j$ if there is an arrow from $i$ to $j$. Node $j$ is then a child of $i$.\n\nIn our DAG:\n- UniversityPrestige is a parent of both TechnicalSkill and HiringRecommendation — it has no parents of its own, making it a *source* node.\n- HiringRecommendation is a child of ProjectPortfolio, TechnicalSkill, and UniversityPrestige — it has no children, making it a *sink* node.\n- TechnicalSkill is a child of UniversityPrestige and a parent of ProjectPortfolio and HiringRecommendation.\n\n**Bare-bones causal view:** The graph encodes $Z \\rightarrow X$, $Z \\rightarrow Y$, $X \\rightarrow M$, $X \\rightarrow Y$, and $M \\rightarrow Y$; direction is not decoration — reversing any arrow would assert a different and contradictory causal mechanism.\n\n**Key takeaways:**\n- A node is a variable; a directed edge is a direct causal influence from parent to child.\n- Direction is not symmetric: $X \\rightarrow Y$ and $Y \\rightarrow X$ are different causal claims.\n- Every node's parents are exactly the variables that directly shape it.",
+          "markers": [],
+          "part": "intuition"
+        },
+        {
+          "section": "The Hiring-Pipeline DAG",
+          "content": "```mermaid\nflowchart TD\n    Z[\"UniversityPrestige (Z)\"]\n    X[\"TechnicalSkill (X)\"]\n    M[\"ProjectPortfolio (M)\"]\n    Y[\"HiringRecommendation (Y)\"]\n    Z -->|\"shapes skill developed\"| X\n    Z -->|\"residual prestige path\"| Y\n    X -->|\"skill produces portfolio\"| M\n    X -->|\"skill drives recommendation\"| Y\n    M -->|\"portfolio influences recommendation\"| Y\n```\n<em>The hiring-pipeline DAG: four nodes (variables) connected by five directed edges (direct causal influences). UniversityPrestige is the only source node; HiringRecommendation is the only sink node. Every arrowhead points from cause to effect.</em>",
+          "markers": [],
+          "part": "visual"
+        },
+        {
+          "section": "Why This Matters",
+          "content": "Here is a specific trap that comes up in ML fairness audits: a team notices that UniversityPrestige and HiringRecommendation are strongly correlated in the model's outputs, and they conclude that prestige is \"just a proxy for skill\" — so no intervention is needed. That reasoning implicitly treats the prestige-to-recommendation relationship as flowing entirely through TechnicalSkill. But the DAG shows a *direct* edge from UniversityPrestige to HiringRecommendation that bypasses skill altogether. Without representing causal direction explicitly, the team cannot even see the second path, let alone decide whether to block it. Correlation alone — whether from a feature-importance score or a Pearson matrix — cannot tell you which path is doing the work, because it treats every relationship as symmetric.",
+          "markers": [],
+          "part": "extra"
+        },
+        {
+          "section": "Check Your Understanding",
+          "content": "1. **Sharpening.** In a directed causal graph, what is the precise difference between a **parent** and a **child** node?\n\n   A. A parent has more data points than a child.\n   B. A parent node has a directed edge pointing *toward* a child node, meaning the parent directly influences the child.\n   C. A child node is always observed; a parent node is always hidden.\n   D. Parents and children are just two names for the same symmetric relationship.\n\n2. **Applying.** Suppose an ML team adds a new variable, InterviewScore, which is determined *after* HiringRecommendation is issued and depends on how the interviewer reacts to the recommendation. Which of the following correctly describes InterviewScore's relationship to HiringRecommendation in a DAG for this extended pipeline?\n\n   A. HiringRecommendation is a child of InterviewScore.\n   B. InterviewScore is a parent of HiringRecommendation.\n   C. HiringRecommendation is a parent of InterviewScore.\n   D. The two nodes are not adjacent because they are in different stages.\n\n3. **Communicating.** In 1-2 sentences, explain in your own words why direction matters when drawing an edge between two variables in a causal graph.\n\n<details>\n<summary>Show answers</summary>\n\n**Answer 1: B.**\nA parent node has a directed arrow pointing to the child, encoding that the parent directly influences the child's value — not the reverse. Options A, C, and D confuse causal direction with data properties or treat the relationship as symmetric.\n\n**Answer 2: C.**\nBecause InterviewOpportunity is determined after and partly because of HiringRecommendation — the recommendation causes whether an interview slot is granted, not the interview's outcome itself — the arrow points from HiringRecommendation to InterviewOpportunity. HiringRecommendation is the parent (cause) and InterviewOpportunity is the child (effect). Option A reverses this causal direction; options B and D misread the temporal and causal ordering. Note that this edge is *not* part of the anchor hiring-pipeline DAG (Z → X, Z → Y, X → M, X → Y, M → Y); it is introduced here only to illustrate how a downstream opportunity variable would be connected, and the same parent-to-child logic applies throughout that graph — for example, TechnicalSkill (X) is the parent that causally produces ProjectPortfolio (M), never the reverse.\n\n**Answer 3 (model response):** Direction tells us which variable is the cause and which is the effect, so flipping an arrow changes the entire causal story. Without direction, we can only say two variables are related — we cannot say whether changing one would change the other or which intervention would actually help.\n\n</details>",
+          "markers": [],
+          "part": "checkpoint"
+        }
+      ]
+    },
+    {
+      "node_title": "Parents, Children, and Directed Paths",
+      "sections": [
+        {
+          "section": "Learning Objectives & Why Graph Relationships Matter",
+          "content": "> After this section, you'll understand:\n> 1. What it means for one variable to be a **parent**, **child**, **ancestor**, or **descendant** of another in a causal graph.\n> 2. How to trace a **directed path** through a DAG to follow a chain of causal influence.\n> 3. Why a variable can influence an outcome indirectly — without being a direct cause of it.\n\n[CONTEXT_IMAGE: Layout: 16:9 wide scene. A software engineer sits at a desk auditing a resume-screening algorithm, with a monitor showing a flowchart of nodes connected by arrows representing a hiring pipeline. The engineer points to one node in the middle of the chain. Labels on the screen are large and legible. The scene fills the frame with minimal empty space.]\n\nImagine you are auditing a resume-screening algorithm for fairness. You notice that applicants from highly selective universities tend to get recommended for interviews at a higher rate. But is that because the algorithm is directly rewarding prestige — or is it because prestige-correlated features like project portfolios are doing the heavy lifting? To answer that, you need to trace the *path* that influence travels through the causal graph. That is exactly what this node teaches you to do.",
+          "markers": [
+            "[CONTEXT_IMAGE: Layout: 16:9 wide scene. A software engineer sits at a desk auditing a resume-screening algorithm, with a monitor showing a flowchart of nodes connected by arrows representing a hiring pipeline. The engineer points to one node in the middle of the chain. Labels on the screen are large and legible. The scene fills the frame with minimal empty space.]"
+          ],
+          "part": "hook"
+        },
+        {
+          "section": "Before We Dive In",
+          "content": "> You might be thinking: \"If variable A is connected to outcome Y by any path in the graph, then A must be a direct cause of Y.\" This is a very natural first instinct — but it is not quite right. In the previous node we learned that an arrow $A \rightarrow B$ means A directly causes B. But A can also *influence* B through a longer chain of arrows without having a direct arrow into B at all. The terms parent, child, ancestor, and descendant are precisely the vocabulary that lets us tell these two situations apart. Keep that distinction in mind as we work through the example below.",
+          "markers": [],
+          "part": "recall"
+        },
+        {
+          "section": "The Big Idea: Navigating the Causal Graph",
+          "content": "Think of a causal DAG like a river system. Water flows from the mountains downstream to the sea. A node upstream can influence a node far downstream even if there is no direct channel between them — the water just travels through intermediate tributaries. In a causal graph, influence flows along arrows in the same way.\n\nHere is the precise vocabulary for describing those relationships (Source: ECI):\n\n- A **parent** of a node $j$ is any node with a direct arrow *into* $j$.\n- A **child** of a node $j$ is any node that $j$ has a direct arrow *into*.\n- An **ancestor** of a node $j$ is any node from which you can reach $j$ by following arrows forward — including parents, grandparents, and so on.\n- A **descendant** of a node $j$ is any node you can reach *from* $j$ by following arrows forward.\n\nA **directed path** is a sequence of nodes where every step follows an arrow in its forward direction (Source: ECI). It is the route that causal influence travels.\n\n**Walking through the hiring pipeline**\n\nLet's apply these ideas to our resume-screening scenario. We have four variables: UniversityPrestige (confounder $Z$), TechnicalSkill (treatment $X$), ProjectPortfolio (mediator $M$), and HiringRecommendation (outcome $Y$). (We are working within a single hiring cycle, so no feedback from the hiring outcome back to skill or prestige is modeled here.)\n\n1. **Identify the parents of HiringRecommendation ($Y$).** Look at which nodes have a direct arrow pointing *into* $Y$. Following the canonical edges, three nodes do: UniversityPrestige ($Z$), TechnicalSkill ($X$), and ProjectPortfolio ($M$). All three are direct parents of $Y$.\n\n2. **Trace a directed path.** Now follow the chain $Z \\rightarrow X \\rightarrow M \\rightarrow Y$: UniversityPrestige shapes TechnicalSkill, which shapes ProjectPortfolio, which in turn influences HiringRecommendation. Every step follows an arrow forward — that is a directed path (Source: ECI).\n\n3. **Label the roles of TechnicalSkill ($X$).** TechnicalSkill is a *child* of UniversityPrestige (because $Z \\rightarrow X$ is a direct edge). It is also an *ancestor* of HiringRecommendation (because you can reach $Y$ from $X$ by following arrows forward, either directly via $X \\rightarrow Y$ or through $X \\rightarrow M \\rightarrow Y$). One variable, two roles — and neither role requires a direct edge all the way to $Y$.\n\n**Bare-bones causal view:** $Z$ is an ancestor of every other node; $Y$ is a descendant of every other node. TechnicalSkill ($X$) sits in the middle: a child of $Z$ and an ancestor of $Y$, connected by both a direct edge $X \\rightarrow Y$ and an indirect path $X \\rightarrow M \\rightarrow Y$.\n\nHere is a quick reference for the four relationships:\n\n| Relationship | Meaning | Example from the pipeline |\n|---|---|---|\n| Parent | Direct arrow into the node | $Z$, $X$, $M$ are parents of $Y$ |\n| Child | Node the arrow points to directly | $X$ is a child of $Z$ |\n| Ancestor | Reachable by following arrows forward | $Z$ is an ancestor of $Y$ |\n| Descendant | Can be reached from this node | $Y$ is a descendant of $Z$ |\n\n**Key takeaways:**\n- Being an ancestor does *not* require a direct edge — influence can travel through intermediaries.\n- A single variable can be a child of one node and an ancestor of another at the same time.\n- Directed paths are the routes causal influence travels; tracing them is how you audit which variables can affect an outcome.",
+          "markers": [],
+          "part": "intuition"
+        },
+        {
+          "section": "Causal Graph: The Hiring Pipeline",
+          "content": "```mermaid\nflowchart LR\n    Z[\"UniversityPrestige (Z)\"] --> X[\"TechnicalSkill (X)\"]\n    Z --> Y[\"HiringRecommendation (Y)\"]\n    X --> M[\"ProjectPortfolio (M)\"]\n    X --> Y\n    M --> Y\n```\n<em>The resume-screening DAG. UniversityPrestige ($Z$) is the sole source node — it has no parents. HiringRecommendation ($Y$) is the sole sink node — it has no children. TechnicalSkill ($X$) is both a child of $Z$ and an ancestor of $Y$. The directed path $Z \\rightarrow X \\rightarrow M \\rightarrow Y$ shows how prestige can influence the hiring recommendation indirectly, without needing a direct edge from $Z$ to $M$.</em>",
+          "markers": [],
+          "part": "visual"
+        },
+        {
+          "section": "Why This Matters",
+          "content": "Here is a concrete trap that shows up in ML fairness audits: a practitioner removes the direct edge from UniversityPrestige to the model's output, declares the model \"prestige-blind,\" and moves on. But if TechnicalSkill and ProjectPortfolio were themselves shaped by prestige — as the DAG shows — then prestige still reaches the outcome through those indirect paths. The intuition that \"blocking the direct arrow is enough\" fails precisely because it ignores the ancestor-descendant relationships you just learned. Tracing directed paths is what lets you see every route influence can travel, not just the most obvious one.",
+          "markers": [],
+          "part": "extra"
+        },
+        {
+          "section": "Check Your Understanding",
+          "content": "1. **Sharpening.** In a causal DAG, what is the difference between a *parent* of a node and an *ancestor* of a node?\n\n   A. They are the same thing — both mean a direct cause.\n   B. A parent has a direct arrow into the node; an ancestor can reach the node by following any number of forward arrows.\n   C. An ancestor has a direct arrow into the node; a parent is any upstream variable.\n   D. Parents and ancestors are both defined only for sink nodes.\n\n2. **Applying.** Suppose a new feature is added to the hiring pipeline: an automated code-test score (call it CodeScore) that is caused by TechnicalSkill ($X$) and directly influences HiringRecommendation ($Y$), but has no effect on ProjectPortfolio ($M$). In this extended graph, which of the following statements is true?\n\n   A. CodeScore is a parent of TechnicalSkill.\n   B. CodeScore is an ancestor of TechnicalSkill.\n   C. CodeScore is a child of TechnicalSkill and a parent of HiringRecommendation.\n   D. CodeScore is a descendant of HiringRecommendation.\n\n3. **Communicating.** In 1-2 sentences, explain in your own words why UniversityPrestige ($Z$) can influence HiringRecommendation ($Y$) even if we imagine removing the direct arrow $Z \\rightarrow Y$.\n\n<details>\n<summary>Show Answers</summary>\n\n**Answer 1: B.**\nA parent is specifically a node with a *direct* arrow into the target node. An ancestor is any node from which you can reach the target by following a chain of forward arrows — it includes parents but also grandparents and beyond.\n\n**Answer 2: C.**\nCodeScore is caused by TechnicalSkill ($X$), so $X \\rightarrow$ CodeScore makes CodeScore a child of $X$. CodeScore then directly influences HiringRecommendation ($Y$), so it is also a parent of $Y$. It is not upstream of $X$ or downstream of $Y$.\n\n**Answer 3 (model response):** Even without a direct arrow, UniversityPrestige ($Z$) is still an ancestor of HiringRecommendation ($Y$) because directed paths like $Z \\rightarrow X \\rightarrow Y$ and $Z \\rightarrow X \\rightarrow M \\rightarrow Y$ remain open. Causal influence travels along any directed path, not only direct edges.\n\n</details>",
+          "markers": [],
+          "part": "checkpoint"
+        }
+      ]
+    },
+    {
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop",
+      "sections": [
+        {
+          "section": "Why Causal Graphs Can't Go in Circles",
+          "content": "> **After this section, you'll be able to:**\n> 1. Explain what **acyclicity** means and why causal DAGs require it.\n> 2. Trace every directed path in the hiring-pipeline graph and confirm none loops back to its start.\n> 3. Describe why adding a same-snapshot edge like $HiringRecommendation \\rightarrow TechnicalSkill$ breaks the model.\n\n[CONTEXT_IMAGE: Layout: 16:9 wide scene. A software engineer sits at a desk reviewing a flowchart of a resume-screening pipeline printed on paper; arrows on the chart flow clearly from left to right through boxes labeled with hiring-pipeline stages; the engineer traces the arrows with a finger, and the chart fills most of the frame with no circular arrows visible.]\n\nImagine you are auditing a resume-screening algorithm for a tech company. You want to map out exactly what causes what — does an applicant's university prestige shape the hiring recommendation directly? Does technical skill flow through a project portfolio before reaching the decision? Drawing those arrows carefully is the whole point of a causal graph. But what happens if someone draws an arrow pointing <em>backward</em> — from the hiring decision back to the applicant's skill level — in the very same snapshot? That single arrow would make the whole map logically collapse, and understanding why is the key idea of this node.",
+          "markers": [
+            "[CONTEXT_IMAGE: Layout: 16:9 wide scene. A software engineer sits at a desk reviewing a flowchart of a resume-screening pipeline printed on paper; arrows on the chart flow clearly from left to right through boxes labeled with hiring-pipeline stages; the engineer traces the arrows with a finger, and the chart fills most of the frame with no circular arrows visible.]"
+          ],
+          "part": "hook"
+        },
+        {
+          "section": "Before We Dive In",
+          "content": "> You might be thinking: \"Cycles in graphs are totally normal — recurrent neural networks and feedback controllers use them all the time, so what's the problem?\" That intuition makes sense for dynamic systems that unfold over time. But a causal DAG is a <em>static snapshot</em> of one moment — it asks \"what caused what in this round?\" not \"what happens after many rounds?\" In a single snapshot, if A causes B and B causes A simultaneously, there is no starting point for the causal story, and the model breaks down. That is the trap this node is here to catch.",
+          "markers": [],
+          "part": "recall"
+        },
+        {
+          "section": "The One Rule Every Causal Graph Must Obey",
+          "content": "Think of a causal graph like a one-way street system. Every arrow points traffic in a fixed direction, and no road ever loops you back to where you started. That property has a formal name: **acyclicity** — meaning the graph contains no directed cycle, no path that starts at a node and eventually returns to that same node through a chain of forward-pointing arrows (Source: ECI).\n\nA **directed acyclic graph (DAG)** is simply a graph where every edge has a direction <em>and</em> no directed cycle exists (Source: ECI). These requirements make a graph a DAG; it becomes a causal model only when its nodes and arrows are given causal meaning for a fixed snapshot.\n\nWhy does acyclicity matter so much? In an SCM, each variable is determined by its parents: TechnicalSkill is shaped by UniversityPrestige, ProjectPortfolio is shaped by TechnicalSkill, and so on. That chain of determination only makes sense if there is a clear ordering — a \"who goes first\" (Source: ECI). A cycle destroys that ordering. If X determines Y and Y simultaneously determines X in the same snapshot, neither can be computed first. The causal story has no starting point.\n\n**Verifying the hiring-pipeline DAG**\n\nLet's walk through the anchor case step by step. We have four variables: UniversityPrestige (confounder $Z$), TechnicalSkill (treatment $X$), ProjectPortfolio (mediator $M$), and HiringRecommendation (outcome $Y$). The canonical edges are:\n\n1. $Z \\rightarrow X$ — prestige shapes measured skill signals.\n2. $Z \\rightarrow Y$ — prestige has a residual influence on the recommendation.\n3. $X \\rightarrow M$ — skill shapes the quality of the project portfolio.\n4. $X \\rightarrow Y$ — skill directly influences the recommendation.\n5. $M \\rightarrow Y$ — portfolio quality influences the recommendation.\n\nNow try to find a directed cycle. Start anywhere and follow arrows forward:\n- From $Z$: you can reach $X$, $M$, and $Y$ — but no arrow points back to $Z$.\n- From $X$: you can reach $M$ and $Y$ — but no arrow points back to $X$.\n- From $M$: you can reach $Y$ — but no arrow points back to $M$.\n- From $Y$: there are no outgoing arrows at all — $Y$ is a sink.\n\nEvery path terminates. No path returns to its origin. The graph is acyclic. ✓\n\n| Variable | Has outgoing arrows? | Can any path return to it? |\n|---|---|---|\n| UniversityPrestige ($Z$) | Yes | No — it is a source |\n| TechnicalSkill ($X$) | Yes | No |\n| ProjectPortfolio ($M$) | Yes | No |\n| HiringRecommendation ($Y$) | No | No — it is a sink |\n\n> **Counterexample variant.**\n> Now imagine someone argues: \"The hiring recommendation probably feeds back into how applicants develop their skills — rejected candidates study harder next time.\" That is plausible as a <em>dynamic</em> story across multiple hiring rounds. But suppose we tried to add the edge HiringRecommendation ($Y$) → TechnicalSkill ($X$) inside the <em>same single-round snapshot</em>. Suddenly we have a directed cycle: $X \\rightarrow M \\rightarrow Y \\rightarrow X$ and also $X \\rightarrow Y \\rightarrow X$. This same-time cycle cannot be represented by a static DAG; the standard SCM framework assumes an acyclic graph precisely so that each variable can be assigned in a well-defined order (Source: ECI, §6.2). To model the real-world feedback, use time-indexed variables across rounds — $X_t \\rightarrow Y_t$ and $Y_t \\rightarrow X_{t+1}$ — which restores acyclicity. Alternatively, a dynamic or equilibrium model can handle cyclic dependencies, but that requires a different framework than the static DAG used here. The fix is not to ban the real-world feedback; it is to represent it in a way that respects the causal ordering the model requires.\n\nReturning to the base anchor: with the forbidden edge removed, the hiring-pipeline DAG is clean, acyclic, and ready to use for causal reasoning.\n\n**Bare-bones causal view:** The base anchor has $Z$ as a source and $Y$ as a sink; every directed path flows strictly forward ($Z \\rightarrow X$, $X \\rightarrow M$, $M \\rightarrow Y$, etc.), so no path from any node returns to itself — the DAG is acyclic by construction.",
+          "markers": [],
+          "part": "intuition"
+        },
+        {
+          "section": "The Hiring Pipeline at a Glance",
+          "content": "```mermaid\nflowchart TD\n    Z[\"UniversityPrestige (Z)\"]\n    X[\"TechnicalSkill (X)\"]\n    M[\"ProjectPortfolio (M)\"]\n    Y[\"HiringRecommendation (Y)\"]\n    Z --> X\n    Z --> Y\n    X --> M\n    X --> Y\n    M --> Y\n```\n<em>The base anchor DAG: every arrow flows forward and no directed path returns to its starting node, confirming acyclicity. UniversityPrestige is the only source (no incoming arrows); HiringRecommendation is the only sink (no outgoing arrows).</em>\n\n```mermaid\nflowchart TD\n    Z2[\"UniversityPrestige (Z)\"]\n    X2[\"TechnicalSkill (X)\"]\n    M2[\"ProjectPortfolio (M)\"]\n    Y2[\"HiringRecommendation (Y)\"]\n    Z2 --> X2\n    Z2 --> Y2\n    X2 --> M2\n    X2 --> Y2\n    M2 --> Y2\n    Y2 -->|\"FORBIDDEN same-snapshot edge\"| X2\n```\n<em>Counterexample variant only — do not treat this as the canonical DAG. Adding $HiringRecommendation \\rightarrow TechnicalSkill$ in the same snapshot creates directed cycles (e.g. $X \\rightarrow Y \\rightarrow X$ and $X \\rightarrow M \\rightarrow Y \\rightarrow X$), making causal ordering undefined. This edge is excluded from the base anchor.</em>",
+          "markers": [],
+          "part": "visual"
+        },
+        {
+          "section": "Why This Matters",
+          "content": "Here is a concrete trap in ML fairness work: auditors sometimes try to model feedback loops — for example, \"the algorithm's past decisions influenced which candidates built stronger portfolios, which in turn changed future skill distributions\" — inside a single-round causal graph. When they do, they inadvertently introduce a directed cycle, so the graph is no longer a valid static DAG; represent that feedback with time-indexed variables or a dynamic model instead. The audit conclusions drawn from a cyclic graph become unreliable because the graph no longer satisfies the acyclicity requirement that makes structural causal models well-defined (see Definition 6.2: an SCM assumes an acyclic graph so that each assignment $X_j := f_j(\\mathrm{PA}_j, N_j)$ has a unique solution).\n\n> **Counterexample variant.** *Changed assumption: the forbidden edge $Y \\to X$ is temporarily added to the base anchor.* Suppose an auditor adds the edge HiringRecommendation $(Y) \\to$ TechnicalSkill $(X)$ to the hiring-pipeline DAG, intending to capture the idea that a positive recommendation today boosts a candidate's confidence and future skill. The graph now contains the directed cycle $X \\to Y \\to X$, which violates acyclicity. This variant is **not** a valid static DAG; it would require time-indexed variables — e.g., $X_t \\to Y_t \\to X_{t+1}$ — to be modelled honestly. After this illustration, the forbidden edge is removed and the base anchor is restored: the five canonical edges (Z→X, Z→Y, X→M, X→Y, M→Y) remain, with no path from Y back to any ancestor.\n\nThe intuition fails because feedback loops are real and important, but they belong in a time-indexed or dynamic model, not in a static single-snapshot DAG. Recognising this distinction — acyclic snapshot versus dynamic multi-round model — is what lets you build causal graphs that are both honest about real feedback and mathematically valid.",
+          "markers": [],
+          "part": "extra"
+        },
+        {
+          "section": "Check Your Understanding",
+          "content": "1. **Sharpening.** What does **acyclicity** require of a directed graph?\n\n   A. Every node must have at least one outgoing arrow.\n   B. No directed path can return to the node where it started.\n   C. All arrows must point in the same horizontal direction.\n   D. The graph must have exactly one source node.\n\n2. **Applying.** Suppose an auditor adds a new edge — ProjectPortfolio ($M$) → UniversityPrestige ($Z$) — to the hiring-pipeline DAG in the same snapshot. Which of the following best describes the consequence?\n\n   A. The graph gains a useful mediator path and remains a valid DAG.\n   B. UniversityPrestige becomes a sink, which is allowed.\n   C. A directed cycle is created (e.g. $X \\rightarrow Y \\rightarrow X$), violating acyclicity.\n   D. The graph becomes undirected but stays acyclic.\n\n3. **Communicating.** In your own words (1-2 sentences), explain why a same-snapshot cycle makes a causal model break down.\n\n<details>\n<summary>Show Answers</summary>\n\n**Answer 1: B.**\nAcyclicity means you can follow arrows forward from any node and never arrive back at that same node. Options A, C, and D describe unrelated structural properties.\n\n**Answer 2: C.**\nAdding $M \\rightarrow Z$ creates the cycle $Z \\rightarrow X \\rightarrow M \\rightarrow Z$, which means no variable in that loop can be computed before the others — the causal ordering breaks down. The graph is no longer a valid DAG.\n\n**Answer 3 (model response):** A static DAG cannot represent same-snapshot mutual causation. In the base anchor—where edges run Z → X, Z → Y, X → M, X → Y, and M → Y—every variable has a well-defined causal position and the structural assignments can be evaluated in topological order (Z first, then X, then M, then Y). No variable appears on both sides of any assignment simultaneously.\n\n> **Counterexample variant.** *Changed assumption: temporarily add the forbidden edge Y → X (HiringRecommendation → TechnicalSkill) within the same hiring-cycle snapshot.* This creates the directed cycle X → Y → X. Now the structural assignments for X and Y each require the other's value before they can be resolved—there is no valid topological ordering. The problem is not that a consistent numerical solution is impossible in principle (a simultaneous-equations system might have one), but that a *static* DAG has no mechanism to encode which variable is determined first; the acyclicity requirement exists precisely to guarantee a unique, ordered evaluation. To model genuine feedback—for example, a high hiring score in round *t* motivating further skill development by round *t+1*—you would instead use time-indexed variables X_t, Y_t, X_{t+1} in a dynamic SCM, where the edge Y_t → X_{t+1} introduces no cycle because the two nodes are distinct. After this illustration, discard the Y → X edge; it plays no role in the base anchor.\n\nReturning to the base anchor: because HiringRecommendation has no outgoing edges, the graph is acyclic, every variable's value is determined exactly once in causal order, and the model produces a unique joint distribution over all four variables.\n\n</details>",
+          "markers": [],
+          "part": "checkpoint"
+        }
+      ]
+    },
+    {
+      "node_title": "Structural Assignments: Each Variable Has a Causal Recipe",
+      "sections": [
+        {
+          "section": "Learning Objectives & Why Causal Recipes Matter",
+          "content": "> After this section, you'll understand:\n> 1. What a **structural assignment** is and how it differs from a regression equation.\n> 2. How the parent set of each variable in a DAG is read directly from its causal recipe.\n> 3. Why this \"recipe\" framing matters for building fairer ML systems.\n\n[CONTEXT_IMAGE: Layout: 16:9 wide scene. A software engineer sits at a desk reviewing a resume-screening algorithm's decision logs on two monitors; one screen shows a candidate profile with university, skill scores, and portfolio links, the other shows a binary hiring recommendation output. The scene is well-lit, modern, and fills the frame with minimal empty space.]\n\nImagine you are auditing a resume-screening algorithm for a tech company. The model spits out a hiring recommendation for every applicant — but *why* did it recommend one candidate and reject another? Was it their coding skill? Their portfolio? Or something subtler, like which university they attended? To answer that question rigorously, you need more than a correlation. You need to know the **causal recipe** behind each variable in the system.",
+          "markers": [
+            "[CONTEXT_IMAGE: Layout: 16:9 wide scene. A software engineer sits at a desk reviewing a resume-screening algorithm's decision logs on two monitors; one screen shows a candidate profile with university, skill scores, and portfolio links, the other shows a binary hiring recommendation output. The scene is well-lit, modern, and fills the frame with minimal empty space.]"
+          ],
+          "part": "hook"
+        },
+        {
+          "section": "Before We Dive In",
+          "content": "> You might be thinking: \"A structural equation is just like a regression — it tells me how well $X$ predicts $Y$.\" That intuition is understandable, but it leads somewhere wrong. A regression line is a summary of observed patterns; it does *not* tell you what would happen to $Y$ if you forcibly changed $X$. A structural assignment, by contrast, is a claim about the actual causal mechanism — it says which variables *determine* the value of a given variable, not just which ones *correlate* with it. Keep that distinction in mind as we build the idea below.",
+          "markers": [],
+          "part": "recall"
+        },
+        {
+          "section": "The Big Idea: Every Variable Has a Causal Recipe",
+          "content": "Think of a **structural causal model (SCM)** — a complete causal description of a system — as a kitchen with one recipe card per ingredient. Each recipe card says: \"To produce *this* variable, take these specific inputs (its parents) and add some unpredictable noise.\" The noise represents everything the model does not explicitly track: random variation, measurement error, hidden quirks.\n\nMore precisely, every variable has one **structural assignment** — a function that maps its parent variables plus a noise term to its own value (Source: ECI). The notation looks like this:\n\n$X_j := f_j(PA_j, N_j)$\n\nRead that as: \"Variable $X_j$ is *determined by* a function of its parents $PA_j$ and its own noise $N_j$.\" The $:=$ symbol (assignment) is deliberate — it signals a causal direction, not just a mathematical equality. You cannot flip it around the way you can flip an algebraic equation.\n\n**Here is the key connection to the DAG:** the graph is not drawn separately from the assignments. It is *read off* from them. For each variable, you draw an arrow from every parent that appears in its recipe into that variable (Source: ECI). The graph is just a picture of who feeds into whom.\n\n### Walking Through the Hiring Pipeline\n\nLet's make this concrete with the resume-screening scenario. We have four variables and five causal recipes. (Note: this is a single-snapshot model of one hiring cycle; feedback from hiring outcomes back to skill or university reputation is excluded and would require time-indexed variables.)\n\n**Step 1 — UniversityPrestige** (confounder $Z$) has no parents. Nothing in our model determines which university an applicant attended before applying. Its recipe is simply:\n\n$Z := N_Z$\n\nAll variation comes from noise — it is a source node with no incoming arrows.\n\n**Step 2 — TechnicalSkill** (treatment $X$) is shaped by university prestige. Attending a more selective institution influences the skill signals the algorithm sees:\n\n$X := f_X(Z, N_X)$\n\nParents on the right-hand side: just $Z$. So the DAG gets one arrow: $Z \\rightarrow X$.\n\n**Step 3 — ProjectPortfolio** (mediator $M$) is determined by the applicant's technical skill. A stronger programmer tends to build a richer public portfolio:\n\n$M := f_M(X, N_M)$\n\nParents on the right-hand side: just $X$. Arrow in the DAG: $X \\rightarrow M$.\n\n**Step 4 — HiringRecommendation** (outcome $Y$) is the algorithm's binary output. It is influenced by all three upstream variables — prestige leaves a trace through training-data correlations, skill has a direct signal, and the portfolio is an explicit input feature:\n\n$Y := f_Y(Z, X, M, N_Y)$\n\nParents on the right-hand side: $Z$, $X$, and $M$. Arrows in the DAG: $Z \\rightarrow Y$, $X \\rightarrow Y$, $M \\rightarrow Y$.\n\n**Bare-bones causal view:** The parent set of each node is exactly the set of variables appearing in its assignment: $Z$ has no parents; $X$'s parent is $Z$; $M$'s parent is $X$; $Y$'s parents are $Z$, $X$, and $M$. Every arrow in the DAG is a direct read-off from these recipes.\n\n### What This Table Shows\n\n| Variable | Assignment inputs (parents + noise) | Arrows into this node |\n|---|---|---|\n| UniversityPrestige $Z$ | $N_Z$ only | None |\n| TechnicalSkill $X$ | $Z$, $N_X$ | $Z \\rightarrow X$ |\n| ProjectPortfolio $M$ | $X$, $N_M$ | $X \\rightarrow M$ |\n| HiringRecommendation $Y$ | $Z$, $X$, $M$, $N_Y$ | $Z \\rightarrow Y$, $X \\rightarrow Y$, $M \\rightarrow Y$ |\n\n**Key takeaways:**\n- Each variable gets exactly one structural assignment — not one per arrow (Source: ECI).\n- The DAG is derived from the assignments, not the other way around.\n- The noise term in each recipe captures everything not explicitly modeled.",
+          "markers": [],
+          "part": "intuition"
+        },
+        {
+          "section": "Seeing the Recipes as a Graph",
+          "content": "Here is the full DAG for the hiring pipeline, built directly from the four assignments above.\n\n```mermaid\nflowchart TD\n    Z[\"UniversityPrestige Z<br/>(no parents — source node)\"]\n    X[\"TechnicalSkill X<br/>(parent: Z)\"]\n    M[\"ProjectPortfolio M<br/>(parent: X)\"]\n    Y[\"HiringRecommendation Y<br/>(parents: Z, X, M)\"]\n\n    Z --> X\n    Z --> Y\n    X --> M\n    X --> Y\n    M --> Y\n```\n\n<em>Every arrow in this DAG corresponds to a parent variable appearing in the child's structural assignment. UniversityPrestige feeds into both TechnicalSkill and HiringRecommendation; TechnicalSkill feeds into ProjectPortfolio and HiringRecommendation; ProjectPortfolio feeds into HiringRecommendation.</em>",
+          "markers": [],
+          "part": "visual"
+        },
+        {
+          "section": "Why This Matters",
+          "content": "Here is a trap that catches many ML practitioners: **proxy discrimination** in a trained model. Suppose you audit the hiring model and find that UniversityPrestige is not an explicit input feature — it was dropped from the feature set. You might conclude the model is prestige-neutral. But if the training data carried prestige-correlated patterns into TechnicalSkill scores or ProjectPortfolio ratings, the structural assignments tell you prestige still shapes the outcome through those paths. The DAG makes this visible; a regression coefficient on the remaining features does not. Without the recipe framing, the intuition that \"we removed the sensitive attribute, so we removed its influence\" fails silently — and the model continues to encode the bias you thought you removed.",
+          "markers": [],
+          "part": "extra"
+        },
+        {
+          "section": "Check Your Understanding",
+          "content": "1. **Sharpening.** What does the $:=$ symbol in a structural assignment mean, and how does it differ from a regular $=$ sign in algebra?\n\n   A. It means the two sides are equal and interchangeable.\n   B. It means the left-hand variable is *determined by* the right-hand inputs, indicating a causal direction that cannot be flipped.\n   C. It means the relationship was estimated by a regression model.\n   D. It means both sides must have the same numerical value at all times.\n\n2. **Applying.** Suppose a new variable **CodeTestScore** is added to the pipeline. Its value is determined by TechnicalSkill and a noise term, and it directly influences HiringRecommendation. Write the informal structural assignment for CodeTestScore and state which new arrows would be added to the DAG.\n\n   A. $CodeTestScore := f(HiringRecommendation, N)$; add $HiringRecommendation \\rightarrow CodeTestScore$.\n   B. $CodeTestScore := f(TechnicalSkill, N)$; add $TechnicalSkill \\rightarrow CodeTestScore$ and $CodeTestScore \\rightarrow HiringRecommendation$.\n   C. $CodeTestScore := f(UniversityPrestige, N)$; add $UniversityPrestige \\rightarrow CodeTestScore$.\n   D. $CodeTestScore := f(ProjectPortfolio, N)$; add $ProjectPortfolio \\rightarrow CodeTestScore$.\n\n3. **Communicating.** In 1-2 sentences, explain in your own words why a structural assignment is not the same as a regression equation.\n\n<details>\n<summary>Show Answers</summary>\n\n**Answer 1: B.**\nThe $:=$ symbol signals a causal assignment: the right-hand side *produces* the left-hand side, not just correlates with it. You cannot reverse it the way you can rearrange $a = b$ to $b = a$, because the causal direction is fixed.\n\n**Answer 2: B.**\nCodeTestScore's recipe takes TechnicalSkill as its only parent, so $TechnicalSkill \\rightarrow CodeTestScore$ is added. Because CodeTestScore then appears in HiringRecommendation's recipe, $CodeTestScore \\rightarrow HiringRecommendation$ is also added. Options A, C, and D assign the wrong parents.\n\n**Answer 3 (model response):** A regression equation summarises how well one variable statistically predicts another in observed data, but it does not say what would happen if you forcibly changed an input. A structural assignment makes a causal claim: it names exactly which variables *determine* the outcome, so you can reason about interventions, not just correlations.\n\n</details>",
+          "markers": [],
+          "part": "checkpoint"
+        }
+      ]
+    }
+  ],
+  "image_refs": [
+    {
+      "node_title": "Nodes, Edges, and Causal Direction",
+      "description": "Layout: 16:9 wide scene. A software engineer sits at a desk reviewing a resume-screening dashboard on a large monitor, with a flowchart of applicant attributes visible on screen; the scene fills the frame with clear labels on each panel element and minimal empty background.",
+      "kind": "CONTEXT_IMAGE",
+      "aspect_ratio": "16:9",
+      "section": "What Does Direction Have to Do With Fairness?",
+      "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_1/passive_courses/directed-acyclic-graph-dag/imgs/img_00.png",
+      "model": "openai/gpt-5.4-image-2"
+    },
+    {
+      "node_title": "Parents, Children, and Directed Paths",
+      "description": "Layout: 16:9 wide scene. A software engineer sits at a desk auditing a resume-screening algorithm, with a monitor showing a flowchart of nodes connected by arrows representing a hiring pipeline. The engineer points to one node in the middle of the chain. Labels on the screen are large and legible. The scene fills the frame with minimal empty space.",
+      "kind": "CONTEXT_IMAGE",
+      "aspect_ratio": "16:9",
+      "section": "Learning Objectives & Why Graph Relationships Matter",
+      "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_1/passive_courses/directed-acyclic-graph-dag/imgs/img_01.png",
+      "model": "openai/gpt-5.4-image-2"
+    },
+    {
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop",
+      "description": "Layout: 16:9 wide scene. A software engineer sits at a desk reviewing a flowchart of a resume-screening pipeline printed on paper; arrows on the chart flow clearly from left to right through boxes labeled with hiring-pipeline stages; the engineer traces the arrows with a finger, and the chart fills most of the frame with no circular arrows visible.",
+      "kind": "CONTEXT_IMAGE",
+      "aspect_ratio": "16:9",
+      "section": "Why Causal Graphs Can't Go in Circles",
+      "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_1/passive_courses/directed-acyclic-graph-dag/imgs/img_02.png",
+      "model": "openai/gpt-5.4-image-2"
+    },
+    {
+      "node_title": "Structural Assignments: Each Variable Has a Causal Recipe",
+      "description": "Layout: 16:9 wide scene. A software engineer sits at a desk reviewing a resume-screening algorithm's decision logs on two monitors; one screen shows a candidate profile with university, skill scores, and portfolio links, the other shows a binary hiring recommendation output. The scene is well-lit, modern, and fills the frame with minimal empty space.",
+      "kind": "CONTEXT_IMAGE",
+      "aspect_ratio": "16:9",
+      "section": "Learning Objectives & Why Causal Recipes Matter",
+      "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_1/passive_courses/directed-acyclic-graph-dag/imgs/img_03.png",
+      "model": "openai/gpt-5.4-image-2"
+    }
+  ],
+  "fact_check_issues": [
+    {
+      "section": "Check Your Understanding",
+      "block_id": "s6.b8",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "Because InterviewScore is determined after and partly because of HiringRecommendation, the arrow points from HiringRecommendation to InterviewScore",
+      "problem": "This infers causation from time order and implies a screening recommendation directly causes interview performance; it more plausibly causes interview opportunity or score observability.",
+      "severity": "critical",
+      "suggestion": "Replace InterviewScore with InterviewOpportunity, or rename it ObservedInterviewScore and state that HiringRecommendation causes whether a score is generated or observed.",
+      "node_title": "Nodes, Edges, and Causal Direction"
+    },
+    {
+      "section": "The One Rule Every Causal Graph Must Obey",
+      "block_id": "s3.b2",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "\"Those two requirements together — directed plus acyclic — are what make a DAG a valid causal model.\"",
+      "problem": "Directedness and acyclicity make a graph a DAG, but they are not sufficient by themselves to make it a causal model.",
+      "severity": "critical",
+      "suggestion": "Replace with: \"These requirements make a graph a DAG; it becomes a causal model only when its nodes and arrows are given causal meaning for a fixed snapshot.\"",
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop"
+    },
+    {
+      "section": "The One Rule Every Causal Graph Must Obey",
+      "block_id": "s3.b10",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "The SCM cannot produce a unique solution (Source: ECI).",
+      "problem": "A same-slice cycle violates DAG form, but cyclic SCMs can still have well-defined or unique equilibrium solutions, so this overstates the consequence.",
+      "severity": "critical",
+      "suggestion": "Replace with: \"This same-time cycle cannot be represented by a static DAG; model the feedback with time-indexed variables or a dynamic/equilibrium model instead.\"",
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop"
+    },
+    {
+      "section": "Why This Matters",
+      "block_id": "s5.b1",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "\"When they do, they inadvertently introduce a directed cycle, and the resulting model has no unique solution for any variable.\"",
+      "problem": "A same-slice cycle does not imply no unique solution; it means the graph is not a DAG and needs a time-indexed or dynamic/equilibrium model.",
+      "severity": "critical",
+      "suggestion": "Replace with: \"...they introduce a directed cycle, so the graph is no longer a valid static DAG; represent that feedback with time-indexed variables or a dynamic model instead.\"",
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop"
+    },
+    {
+      "section": "Check Your Understanding",
+      "block_id": "s6.b4",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "C. A directed cycle is created (e.g. $Z ightarrow X ightarrow M ightarrow Z$), violating acyclicity.",
+      "problem": "The cited cycle is not present in the anchor or the stated variant, because there is no edge $M ightarrow Z$; adding $Y ightarrow X$ creates cycles such as $X ightarrow Y ightarrow X$ or $X ightarr...",
+      "severity": "critical",
+      "suggestion": "Replace the example cycle with one induced by the added edge, e.g. \"A directed cycle is created (e.g. $X ightarrow Y ightarrow X$), violating acyclicity.\"",
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop"
+    },
+    {
+      "section": "Check Your Understanding",
+      "block_id": "s6.b9",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "\"Without a causal ordering, the model cannot produce a unique answer for any variable in the cycle.\"",
+      "problem": "This wrongly implies same-slice feedback cannot have a consistent or unique solution, when the real issue is that a static DAG cannot encode the cycle.",
+      "severity": "critical",
+      "suggestion": "Replace with: \"A static DAG cannot represent same-snapshot mutual causation; model feedback with time-indexed variables or a dynamic/equilibrium SCM instead.\"",
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop"
+    }
+  ],
+  "initial_fact_check_issues": [
+    {
+      "section": "Check Your Understanding",
+      "block_id": "s6.b8",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "Because InterviewScore is determined after and partly because of HiringRecommendation, the arrow points from HiringRecommendation to InterviewScore",
+      "problem": "This infers causation from time order and implies a screening recommendation directly causes interview performance; it more plausibly causes interview opportunity or score observability.",
+      "severity": "critical",
+      "suggestion": "Replace InterviewScore with InterviewOpportunity, or rename it ObservedInterviewScore and state that HiringRecommendation causes whether a score is generated or observed.",
+      "node_title": "Nodes, Edges, and Causal Direction"
+    },
+    {
+      "section": "The One Rule Every Causal Graph Must Obey",
+      "block_id": "s3.b2",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "\"Those two requirements together — directed plus acyclic — are what make a DAG a valid causal model.\"",
+      "problem": "Directedness and acyclicity make a graph a DAG, but they are not sufficient by themselves to make it a causal model.",
+      "severity": "critical",
+      "suggestion": "Replace with: \"These requirements make a graph a DAG; it becomes a causal model only when its nodes and arrows are given causal meaning for a fixed snapshot.\"",
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop"
+    },
+    {
+      "section": "The One Rule Every Causal Graph Must Obey",
+      "block_id": "s3.b10",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "The SCM cannot produce a unique solution (Source: ECI).",
+      "problem": "A same-slice cycle violates DAG form, but cyclic SCMs can still have well-defined or unique equilibrium solutions, so this overstates the consequence.",
+      "severity": "critical",
+      "suggestion": "Replace with: \"This same-time cycle cannot be represented by a static DAG; model the feedback with time-indexed variables or a dynamic/equilibrium model instead.\"",
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop"
+    },
+    {
+      "section": "Why This Matters",
+      "block_id": "s5.b1",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "\"When they do, they inadvertently introduce a directed cycle, and the resulting model has no unique solution for any variable.\"",
+      "problem": "A same-slice cycle does not imply no unique solution; it means the graph is not a DAG and needs a time-indexed or dynamic/equilibrium model.",
+      "severity": "critical",
+      "suggestion": "Replace with: \"...they introduce a directed cycle, so the graph is no longer a valid static DAG; represent that feedback with time-indexed variables or a dynamic model instead.\"",
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop"
+    },
+    {
+      "section": "Check Your Understanding",
+      "block_id": "s6.b4",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "C. A directed cycle is created (e.g. $Z ightarrow X ightarrow M ightarrow Z$), violating acyclicity.",
+      "problem": "The cited cycle is not present in the anchor or the stated variant, because there is no edge $M ightarrow Z$; adding $Y ightarrow X$ creates cycles such as $X ightarrow Y ightarrow X$ or $X ightarr...",
+      "severity": "critical",
+      "suggestion": "Replace the example cycle with one induced by the added edge, e.g. \"A directed cycle is created (e.g. $X ightarrow Y ightarrow X$), violating acyclicity.\"",
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop"
+    },
+    {
+      "section": "Check Your Understanding",
+      "block_id": "s6.b9",
+      "block_type": "paragraph",
+      "dependent_block_ids": [],
+      "axis": "causal",
+      "claim": "\"Without a causal ordering, the model cannot produce a unique answer for any variable in the cycle.\"",
+      "problem": "This wrongly implies same-slice feedback cannot have a consistent or unique solution, when the real issue is that a static DAG cannot encode the cycle.",
+      "severity": "critical",
+      "suggestion": "Replace with: \"A static DAG cannot represent same-snapshot mutual causation; model feedback with time-indexed variables or a dynamic/equilibrium SCM instead.\"",
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop"
+    }
+  ],
+  "residual_fact_check_issues": [],
+  "qa_log": [
+    {
+      "node_title": "Nodes, Edges, and Causal Direction",
+      "qa_path": "critic-ran+rewrite+recheck+confirmation",
+      "qa_status": "passed_after_rewrite",
+      "risk": "high",
+      "issues": 1,
+      "critical": 1,
+      "residual_issues": 0,
+      "residual_critical": 0,
+      "rewrites": 1,
+      "repair_cycles": 1,
+      "max_repair_cycles": 3,
+      "rewrite_failures": 0,
+      "rewrite_log": [
+        {
+          "section": "Check Your Understanding",
+          "block_id": "s6.b8",
+          "block_type": "paragraph",
+          "repair_cycle": 1,
+          "attempt": 1,
+          "rewrite_attempted": true,
+          "rewrite_applied": true,
+          "rewrite_error": "",
+          "rewrite_granularity": "block"
+        }
+      ],
+      "confirmation_ran": true,
+      "confirmation_failed": false,
+      "escalation_ran": false,
+      "escalation_failed": false,
+      "contract_issues": 0,
+      "contract_repairs": 0,
+      "contract_repair_log": [],
+      "dropped_unsupported_issues": 0,
+      "attempts": 19,
+      "llm_calls": 19,
+      "failed_calls": 0,
+      "prompt_tokens": 122996,
+      "completion_tokens": 7582,
+      "total_tokens": 130578,
+      "errors": []
+    },
+    {
+      "node_title": "Parents, Children, and Directed Paths",
+      "qa_path": "critic-ran",
+      "qa_status": "passed",
+      "risk": "high",
+      "issues": 0,
+      "critical": 0,
+      "residual_issues": 0,
+      "residual_critical": 0,
+      "rewrites": 0,
+      "repair_cycles": 0,
+      "max_repair_cycles": 3,
+      "rewrite_failures": 0,
+      "rewrite_log": [],
+      "confirmation_ran": false,
+      "confirmation_failed": false,
+      "escalation_ran": false,
+      "escalation_failed": false,
+      "contract_issues": 0,
+      "contract_repairs": 0,
+      "contract_repair_log": [],
+      "dropped_unsupported_issues": 1,
+      "attempts": 15,
+      "llm_calls": 15,
+      "failed_calls": 0,
+      "prompt_tokens": 99758,
+      "completion_tokens": 6047,
+      "total_tokens": 105805,
+      "errors": []
+    },
+    {
+      "node_title": "Acyclicity and Why Causal Graphs Cannot Loop",
+      "qa_path": "critic-ran+rewrite+recheck+confirmation",
+      "qa_status": "passed_after_rewrite",
+      "risk": "high",
+      "issues": 5,
+      "critical": 5,
+      "residual_issues": 0,
+      "residual_critical": 0,
+      "rewrites": 5,
+      "repair_cycles": 1,
+      "max_repair_cycles": 3,
+      "rewrite_failures": 0,
+      "rewrite_log": [
+        {
+          "section": "The One Rule Every Causal Graph Must Obey",
+          "block_id": "s3.b2",
+          "block_type": "paragraph",
+          "repair_cycle": 1,
+          "attempt": 1,
+          "rewrite_attempted": true,
+          "rewrite_applied": true,
+          "rewrite_error": "",
+          "rewrite_granularity": "block"
+        },
+        {
+          "section": "The One Rule Every Causal Graph Must Obey",
+          "block_id": "s3.b10",
+          "block_type": "paragraph",
+          "repair_cycle": 1,
+          "attempt": 1,
+          "rewrite_attempted": true,
+          "rewrite_applied": true,
+          "rewrite_error": "",
+          "rewrite_granularity": "block"
+        },
+        {
+          "section": "Why This Matters",
+          "block_id": "s5.b1",
+          "block_type": "paragraph",
+          "repair_cycle": 1,
+          "attempt": 1,
+          "rewrite_attempted": true,
+          "rewrite_applied": true,
+          "rewrite_error": "",
+          "rewrite_granularity": "block"
+        },
+        {
+          "section": "Check Your Understanding",
+          "block_id": "s6.b4",
+          "block_type": "paragraph",
+          "repair_cycle": 1,
+          "attempt": 1,
+          "rewrite_attempted": true,
+          "rewrite_applied": true,
+          "rewrite_error": "",
+          "rewrite_granularity": "block"
+        },
+        {
+          "section": "Check Your Understanding",
+          "block_id": "s6.b9",
+          "block_type": "paragraph",
+          "repair_cycle": 1,
+          "attempt": 1,
+          "rewrite_attempted": true,
+          "rewrite_applied": true,
+          "rewrite_error": "",
+          "rewrite_granularity": "block"
+        }
+      ],
+      "confirmation_ran": true,
+      "confirmation_failed": false,
+      "escalation_ran": false,
+      "escalation_failed": false,
+      "contract_issues": 0,
+      "contract_repairs": 0,
+      "contract_repair_log": [],
+      "dropped_unsupported_issues": 1,
+      "attempts": 32,
+      "llm_calls": 32,
+      "failed_calls": 0,
+      "prompt_tokens": 201705,
+      "completion_tokens": 20649,
+      "total_tokens": 222354,
+      "errors": []
+    },
+    {
+      "node_title": "Structural Assignments: Each Variable Has a Causal Recipe",
+      "qa_path": "critic-ran",
+      "qa_status": "passed",
+      "risk": "high",
+      "issues": 0,
+      "critical": 0,
+      "residual_issues": 0,
+      "residual_critical": 0,
+      "rewrites": 0,
+      "repair_cycles": 0,
+      "max_repair_cycles": 3,
+      "rewrite_failures": 0,
+      "rewrite_log": [],
+      "confirmation_ran": false,
+      "confirmation_failed": false,
+      "escalation_ran": false,
+      "escalation_failed": false,
+      "contract_issues": 0,
+      "contract_repairs": 0,
+      "contract_repair_log": [],
+      "dropped_unsupported_issues": 2,
+      "attempts": 21,
+      "llm_calls": 21,
+      "failed_calls": 0,
+      "prompt_tokens": 139250,
+      "completion_tokens": 16991,
+      "total_tokens": 156241,
+      "errors": []
+    }
+  ],
+  "qa_blocked": false
+}

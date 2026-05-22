@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EducAgent — Learner Preview</title>
+<meta name="description" content="EducAgent is a friendly agent tutor that helps everyone learn causality through stories, visual maps, and guided checks." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Lexend:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    /* warm palette - "Sunlight" */
+    --bg: #FFF8EE;
+    --bg-soft: #FFF1DC;
+    --surface: #FFFFFF;
+    --ink: #2A1F14;
+    --ink-soft: #6B5947;
+    --ink-mute: #9C8770;
+    --line: #EFE2CB;
+    --line-soft: #F6ECD9;
+    --primary: #E85D2C;       /* warm coral */
+    --primary-ink: #FFFFFF;
+    --primary-soft: #FFE5D9;
+    --accent: #2BA68C;        /* teal */
+    --accent-soft: #D6F0E9;
+    --sun: #F5B73D;           /* yellow */
+    --sun-soft: #FFEDC2;
+    --plum: #6E4A91;
+    --plum-soft: #ECE2F5;
+    --ok: #2BA68C;
+    --err: #D14C4C;
+    --err-soft: #FBE3E3;
+
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+
+    --shadow-sm: 0 1px 0 rgba(42,31,20,0.04), 0 2px 6px rgba(42,31,20,0.04);
+    --shadow: 0 1px 0 rgba(42,31,20,0.04), 0 8px 24px rgba(42,31,20,0.06);
+    --shadow-lg: 0 2px 0 rgba(42,31,20,0.04), 0 20px 48px rgba(42,31,20,0.10);
+
+    --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+    --font-body: 'Lexend', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  }
+
+  /* Theme: Meadow (cool green) */
+  [data-theme="meadow"] {
+    --bg: #F4F8F2;
+    --bg-soft: #E8F1E3;
+    --surface: #FFFFFF;
+    --ink: #1B2A20;
+    --ink-soft: #4E6353;
+    --ink-mute: #8AA191;
+    --line: #DCE8D7;
+    --line-soft: #E8F0E4;
+    --primary: #2F8A5A;
+    --primary-soft: #D8EFE2;
+    --accent: #E08438;
+    --accent-soft: #FBE7D2;
+    --sun: #F3C73E;
+    --sun-soft: #FCEFC4;
+    --plum: #6B4F8E;
+    --plum-soft: #E9DFF4;
+  }
+
+  /* Theme: Bluebird (calm blue) */
+  [data-theme="bluebird"] {
+    --bg: #F1F5FB;
+    --bg-soft: #E4EDF8;
+    --surface: #FFFFFF;
+    --ink: #16213A;
+    --ink-soft: #4D6080;
+    --ink-mute: #8A9CBA;
+    --line: #DAE4F2;
+    --line-soft: #E8EEF7;
+    --primary: #2A6FDB;
+    --primary-soft: #D7E3F9;
+    --accent: #E66B3B;
+    --accent-soft: #FAE0D2;
+    --sun: #F2C13B;
+    --sun-soft: #FAEBC2;
+    --plum: #7E54B0;
+    --plum-soft: #ECE0F8;
+  }
+
+  /* Theme: Berry (pink/plum) */
+  [data-theme="berry"] {
+    --bg: #FBF2F5;
+    --bg-soft: #F5E4EC;
+    --surface: #FFFFFF;
+    --ink: #2A1626;
+    --ink-soft: #6E4C66;
+    --ink-mute: #A88AA1;
+    --line: #EFD9E3;
+    --line-soft: #F6E6EC;
+    --primary: #C2387A;
+    --primary-soft: #F8D9E7;
+    --accent: #2BA68C;
+    --accent-soft: #D6F0E9;
+    --sun: #F5B73D;
+    --sun-soft: #FFEDC2;
+    --plum: #6E4A91;
+    --plum-soft: #ECE2F5;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection { background: var(--sun-soft); color: var(--ink); }
+
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  input, textarea { font-family: inherit; }
+
+  /* Custom scrollbars */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; border: 2px solid var(--bg); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-mute); }
+
+  #root { min-height: 100vh; }
+
+  /* Friendly focus ring */
+  :focus-visible {
+    outline: 3px solid var(--sun);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Inline markdown classes */
+  em.emph {
+    font-style: normal;
+    font-weight: 600;
+    color: var(--ink);
+    background: linear-gradient(180deg, transparent 65%, var(--sun-soft) 65%);
+    padding: 0 2px;
+    margin: 0 -2px;
+    border-radius: 2px;
+  }
+  code.ic {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    background: var(--bg-soft);
+    padding: 2px 7px;
+    border-radius: 6px;
+    border: 1px solid var(--line-soft);
+    color: var(--ink);
+    font-weight: 500;
+  }
+  em {
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .home-mobile-art { display: none; }
+
+  .lesson-hero-bg-art {
+    position: absolute;
+    z-index: 0;
+    right: -72px;
+    top: 50%;
+    width: min(58vw, 640px);
+    height: calc(100% - 34px);
+    min-height: 260px;
+    object-fit: cover;
+    object-position: center;
+    transform: translateY(-50%) rotate(-1.2deg);
+    opacity: 0.28;
+    filter: saturate(1.08) contrast(1.02);
+    border-radius: 22px;
+    pointer-events: none;
+  }
+
+  .lesson-hero-wash {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+      linear-gradient(90deg, rgba(255,255,255,0.76) 0%, rgba(255,255,255,0.56) 48%, rgba(255,255,255,0.18) 100%);
+    pointer-events: none;
+  }
+
+  @media (max-width: 720px) {
+    body { font-size: 15px; }
+
+    .topbar-inner {
+      padding: 10px 14px !important;
+      gap: 8px !important;
+    }
+    .topbar-brand {
+      gap: 9px !important;
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      overflow: hidden !important;
+    }
+    .topbar-brand > div:first-child {
+      width: 30px !important;
+      height: 30px !important;
+      border-radius: 8px !important;
+    }
+    .topbar-subtitle {
+      display: none !important;
+    }
+    .learner-switch {
+      flex: 0 0 auto !important;
+      width: 40px !important;
+      height: 40px !important;
+      padding: 0 !important;
+      border-radius: 10px !important;
+      min-height: 40px !important;
+    }
+
+    .home-hero {
+      min-height: auto !important;
+      padding: 56px 20px 24px !important;
+      align-items: flex-start !important;
+      background-image:
+        linear-gradient(180deg, rgba(255,248,238,1) 0%, rgba(255,248,238,0.98) 100%) !important;
+      background-position: center top !important;
+      background-size: cover !important;
+      display: block !important;
+    }
+    .home-hero-content {
+      max-width: 100% !important;
+    }
+    .home-title {
+      font-size: clamp(48px, 15vw, 64px) !important;
+      line-height: 0.95 !important;
+    }
+    .home-copy {
+      max-width: 100% !important;
+      font-size: 18px !important;
+      line-height: 1.5 !important;
+      color: var(--ink) !important;
+    }
+    .home-actions {
+      display: grid !important;
+      grid-template-columns: 1fr !important;
+      gap: 10px !important;
+      margin-top: 24px !important;
+    }
+    .home-primary-cta,
+    .home-secondary-cta {
+      width: 100% !important;
+      min-height: 50px !important;
+      justify-content: center !important;
+    }
+    .home-mobile-art {
+      display: block !important;
+      margin-top: 20px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid var(--line-soft);
+      box-shadow: var(--shadow);
+      background: var(--bg-soft);
+    }
+    .home-mobile-art img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      object-position: center center;
+    }
+    .lesson-hero {
+      padding-bottom: clamp(148px, 44vw, 196px) !important;
+    }
+    .lesson-hero-bg-art {
+      left: 20px !important;
+      right: 20px !important;
+      bottom: 22px !important;
+      top: auto !important;
+      width: auto !important;
+      height: clamp(118px, 34vw, 158px) !important;
+      min-height: 0 !important;
+      transform: none !important;
+      opacity: 0.34 !important;
+      border-radius: 16px !important;
+    }
+    .lesson-hero-wash {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.82) 0%, rgba(255,255,255,0.72) 56%, rgba(255,255,255,0.34) 100%) !important;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .home-hero {
+      padding-top: 44px !important;
+    }
+    .home-title {
+      font-size: clamp(44px, 14.6vw, 58px) !important;
+    }
+    .home-copy {
+      font-size: 17px !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="vendor/react.production.min.js"></script>
+<script src="vendor/react-dom.production.min.js"></script>
+<script src="vendor/babel.min.js"></script>
+
+<script>
+  const EDUCAGENT_SCRIPTS = [
+    'tweaks-panel.jsx',
+    'icons.jsx',
+    'content.jsx',
+    'components.jsx',
+    'quiz.jsx',
+    'app.jsx',
+  ];
+
+  function showBootError(error) {
+    const root = document.getElementById('root');
+    root.innerHTML = `
+      <div style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#fff8ee;color:#2a1f14;font-family:Lexend,system-ui,sans-serif;">
+        <div style="max-width:560px;background:#fff;border:1px solid #efe2cb;border-radius:16px;padding:24px;box-shadow:0 16px 40px rgba(42,31,20,.08);">
+          <div style="font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:28px;font-weight:800;margin-bottom:8px;">EducAgent could not start</div>
+          <div style="color:#6b5947;line-height:1.6;">The page loaded, but one of the local scripts failed. Try refreshing once; if it still happens, check the browser console for the file name below.</div>
+          <pre style="margin-top:16px;white-space:pre-wrap;background:#fff1dc;border:1px solid #f6ecd9;border-radius:10px;padding:12px;font-size:12px;color:#6b5947;">${String(error && (error.stack || error.message || error)).replace(/[<>&]/g, (ch) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[ch]))}</pre>
+        </div>
+      </div>
+    `;
+  }
+
+  async function loadEducAgent() {
+    try {
+      for (const src of EDUCAGENT_SCRIPTS) {
+        const response = await fetch(src, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`${src} failed to load (${response.status})`);
+        const source = await response.text();
+        const compiled = Babel.transform(source, {
+          presets: ['env', 'react'],
+          filename: src,
+          sourceMaps: 'inline',
+        }).code;
+        const script = document.createElement('script');
+        script.text = `${compiled}\n//# sourceURL=${src}`;
+        document.body.appendChild(script);
+      }
+    } catch (error) {
+      console.error(error);
+      showBootError(error);
+    }
+  }
+
+  loadEducAgent();
+</script>
+</body>
+</html>
