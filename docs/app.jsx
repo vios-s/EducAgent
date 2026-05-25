@@ -1446,7 +1446,7 @@ function PartnerLinksSection() {
 
 function HomeSectionHeader({ eyebrow, title, text }) {
   return (
-    <div style={{ maxWidth: 720 }}>
+    <div style={{ maxWidth: 980 }}>
       <div style={{
         fontSize: 12,
         color: 'var(--primary)',
