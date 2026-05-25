@@ -218,7 +218,7 @@ function RoadsBlock({ roads }) {
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{i+1}. {r.label}</div>
             <div style={{ fontSize: 14.5, color: 'var(--ink-soft)', lineHeight: 1.55 }}>{r.desc}</div>
             <div style={{ marginTop: 12, fontSize: 12, color: 'var(--ink-mute)', fontStyle: 'italic' }}>
-              {r.hopeful ? '✨ This is what we hope is true.' : '⚠ This is the hidden alternative.'}
+              {r.note || (r.hopeful ? '✨ This is what we hope is true.' : '⚠ This is the hidden alternative.')}
             </div>
           </div>
         );
@@ -564,8 +564,8 @@ function Legend({ color, label }) {
 }
 
 // Graph block — toggles between observational and interventional.
-function GraphBlock() {
-  const [interv, setInterv] = useS(false);
+function GraphBlock({ initialIntervention = false }) {
+  const [interv, setInterv] = useS(Boolean(initialIntervention));
   return (
     <div>
       <CausalGraph intervention={interv}/>
@@ -688,7 +688,7 @@ function LessonView({ lesson, course, lessonIndex, totalLessons, onPrev, onNext,
             case 'cards':      return <VariableCards key={i} items={b.items}/>;
             case 'roads':      return <RoadsBlock key={i} roads={b.roads}/>;
             case 'codebox':    return <CodeBox key={i} label={b.label} code={b.code}/>;
-            case 'graph':      return <GraphBlock key={i}/>;
+            case 'graph':      return <GraphBlock key={i} initialIntervention={b.intervention}/>;
             case 'hiring-graph': return <HiringDagGraph key={i} variant={b.variant}/>;
             case 'markdown':   return <MarkdownBlock key={i} text={b.text}/>;
             case 'quiz':       return <div key={i} style={{ margin: '24px 0' }}><InteractiveQuiz questions={b.questions}/></div>;

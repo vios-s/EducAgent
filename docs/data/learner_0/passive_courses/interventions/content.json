@@ -5,12 +5,12 @@
   "outline": [
     {
       "title": "The Tutoring Puzzle",
-      "summary": "Open with the school report showing tutored students scored higher, invite visitors to guess why, then reveal that students who sought or were selected for tutoring may already have been stronger — so the score gap could be driven by what they brought in, not what tutoring added.",
+      "summary": "Open with the school report headline: tutored students scored higher. Ask visitors whether that proves tutoring works. Then reveal the hidden driver — prior achievement — that influences both who gets tutoring and how students score later. Show the three-node diagram (PriorAchievement, TutoringAssignment, TestScore) and trace the two paths from PriorAchievement: one to the test, one through tutoring assignment. The key insight is that the score gap we see in the data is a mixture of the tutoring effect and the pre-existing difference, so simply comparing the two groups does not answer the causal question.",
       "rag_focus": "observational versus interventional distributions; conditioning is not intervention",
-      "anchor_use": "Display the three-variable graph (PriorAchievement → TutoringAssignment, PriorAchievement → TestScore, TutoringAssignment → TestScore) and highlight the two paths from PriorAchievement to TestScore so visitors can see the hidden driver flowing alongside tutoring.",
+      "anchor_use": "Display a simple bar chart showing tutored versus non-tutored average scores, then overlay the diagram to show that PriorAchievement feeds into both sides of the comparison, making the raw gap misleading as a measure of what tutoring itself does.",
       "target_misconception": "If one group scores higher, the program must have caused the difference.",
-      "interaction_hook": "Ask visitors: 'Before we look at the graph, take a guess — why might tutored students score higher even if tutoring did nothing at all?' Collect two or three answers, then reveal the hidden PriorAchievement arrow.",
-      "learning_arc_step": "Start with a pattern people can recognize, then reveal the hidden driver.",
+      "interaction_hook": "Ask visitors: 'Before we look at scores, what else might be different about the students who signed up for tutoring?' Collect two or three guesses, then reveal prior achievement as the hidden driver on the diagram.",
+      "learning_arc_position": "Start with a pattern people can recognize; reveal a hidden driver.",
       "anchor_mode": "reuse_anchor",
       "changed_assumptions": [],
       "must_preserve_edges": [
@@ -22,12 +22,12 @@
     },
     {
       "title": "Changing the Rule",
-      "summary": "Introduce intervention as the act of changing the assignment rule ourselves — for example, deciding by a coin flip who gets tutoring — which cuts the link from PriorAchievement to TutoringAssignment and lets us see tutoring's own effect cleanly. Mention do(...) once as shorthand for 'changing the rule'.",
+      "summary": "Introduce intervention as the idea of changing the assignment rule ourselves — for example, flipping a coin to decide who gets tutoring — so that prior achievement no longer determines who is in which group. Show the same three-node diagram but with the arrow from PriorAchievement to TutoringAssignment removed, because when we set the rule ourselves that link is cut. Explain that this is what researchers call an intervention: not just looking at students who happened to get tutoring, but actively deciding who gets it regardless of their background. The score gap we measure after that kind of rule change is a much cleaner picture of what tutoring itself does. Mention do-notation once, briefly, as shorthand for 'changing the rule'.",
       "rag_focus": "hard intervention replaces one assignment mechanism; intervention distribution can differ from observational distribution",
-      "anchor_use": "On the same three-variable graph, visually erase or cross out the arrow from PriorAchievement to TutoringAssignment to show what changes when we set the rule ourselves, then ask what the score difference would tell us now.",
+      "anchor_use": "Animate the removal of the PriorAchievement -> TutoringAssignment arrow on the same diagram used in Node 1, so visitors see exactly what changes and what stays the same when we intervene on TutoringAssignment.",
       "target_misconception": "Filtering to students who received tutoring is the same as assigning tutoring by design.",
-      "interaction_hook": "Ask visitors: 'If we flipped a coin to decide who gets tutoring, and tutored students still scored higher, what would that tell us that the school report could not?' Invite one or two responses before confirming the key insight.",
-      "learning_arc_step": "Ask the intervention question: what if we changed the rule?",
+      "interaction_hook": "Ask visitors: 'If you were in charge and could assign tutoring however you liked, how would you do it to get a fair test of whether it helps?' Let them suggest ideas, then show how random assignment maps onto cutting the incoming arrow.",
+      "learning_arc_position": "Ask the intervention question: what if we changed the rule?",
       "anchor_mode": "reuse_anchor",
       "changed_assumptions": [],
       "must_preserve_edges": [
@@ -39,7 +39,7 @@
     }
   ],
   "anchor_case": {
-    "scenario": "A school report shows that students who attended tutoring sessions scored higher on the end-of-term test — but does tutoring itself deserve the credit?",
+    "scenario": "A school report shows that students who received tutoring scored higher on a later test — but is tutoring the reason, or were those students already different to begin with?",
     "variables": {
       "PriorAchievement": {
         "role": "confounder",
@@ -71,16 +71,17 @@
       "Use one school-term snapshot: tutoring is assigned before the later test score is measured.",
       "Later test scores could influence future tutoring, but that would need a time-indexed story."
     ],
-    "rationale": "The tutoring scenario uses a familiar school setting to make the gap between 'noticing a pattern' and 'proving a cause' immediately relatable to any public visitor.",
+    "rationale": "Tutoring is immediately recognizable to any adult visitor, the score gap is a pattern everyone has heard quoted, and the three variables fit on a single small diagram without any technical setup.",
     "anchor_plausibility_check": {
       "would_an_expert_accept": true,
       "role_scope_match": "The story is framed for public understanding rather than professional practice.",
       "magnitudes_reasonable": "The scenario uses ordinary school-report comparisons and does not depend on numerical magnitudes.",
-      "most_likely_expert_objection": "Selection rules vary by school; the lesson treats prior achievement as one plausible hidden driver, not the only one."
+      "most_likely_expert_objection": "Selection rules vary by school; remedial systems may target lower-attaining students, while optional or private tutoring may attract motivated or already high-attaining students."
     },
     "domain_assumptions_used": [
       "Students can differ in prior achievement before tutoring starts.",
-      "Prior achievement can affect both tutoring assignment and later scores."
+      "Tutoring assignment may depend on prior achievement, but the direction can vary by school or opt-in setting.",
+      "Prior achievement can affect later scores."
     ],
     "anchor_invariants": {
       "direct_edges": [
@@ -123,37 +124,37 @@
       "sections": [
         {
           "section": "The Tutoring Puzzle",
-          "content": "A school report lands on the principal's desk. Students who attended tutoring sessions scored noticeably higher on the end-of-term test. The headline practically writes itself: *Tutoring works!*\n\nBut wait — does it? Before we celebrate, let's look a little closer at where that score gap might actually be coming from.\n\n[CONTEXT_IMAGE: A bright school noticeboard displaying a bar chart with two bars side by side. Left bar labelled 'No Tutoring', right bar labelled 'Tutoring', the right bar clearly taller. A cartoon magnifying glass hovers over the gap between the bars, with a question mark inside the lens. Warm classroom colours, friendly and inviting.]\n\n> **After this mini lesson, you will be able to:**\n> - Spot the difference between *noticing a pattern* and *proving a cause*.\n> - Explain why students who get tutoring might already be different from those who don't.\n> - Describe what it would take to truly test whether tutoring itself raises scores.",
+          "content": "A school report lands on the table with a bold headline: *students who received tutoring scored higher on the end-of-term test.* Sounds like proof that tutoring works, right?\n\nNot so fast. Before we celebrate, we need to ask one question: **were the two groups already different before tutoring ever started?** That single question is the heart of causal thinking.\n\n[CONTEXT_IMAGE: A school noticeboard with a printed bar chart pinned to it. Two bars side by side, labelled 'Tutored' and 'Not Tutored', with the 'Tutored' bar clearly taller. A small crowd of illustrated students of mixed ability levels stands in front of the board, some looking surprised, some sceptical. Warm classroom lighting. The viewer should notice the gap between the bars and wonder what is behind it.]\n\n> **After this mini lesson, you will be able to:**\n> - Explain why a score gap between two groups does not, on its own, prove that the program caused the difference.\n> - Name the hidden factor that can inflate or deflate the gap we see in the data.\n> - Describe what it would mean to truly *change the system* to find out whether tutoring works.",
           "markers": [
-            "[CONTEXT_IMAGE: A bright school noticeboard displaying a bar chart with two bars side by side. Left bar labelled 'No Tutoring', right bar labelled 'Tutoring', the right bar clearly taller. A cartoon magnifying glass hovers over the gap between the bars, with a question mark inside the lens. Warm classroom colours, friendly and inviting.]"
+            "[CONTEXT_IMAGE: A school noticeboard with a printed bar chart pinned to it. Two bars side by side, labelled 'Tutored' and 'Not Tutored', with the 'Tutored' bar clearly taller. A small crowd of illustrated students of mixed ability levels stands in front of the board, some looking surprised, some sceptical. Warm classroom lighting. The viewer should notice the gap between the bars and wonder what is behind it.]"
           ],
           "part": "hook"
         },
         {
           "section": "Before We Dive In",
-          "content": "Most of us share the same gut reaction when we see this report: *the tutoring caused the higher scores*. It feels obvious — tutored students did better, so tutoring must be the reason.\n\nThis instinct is understandable, but it has a blind spot. It assumes the two groups — tutored and not tutored — were identical in every way before tutoring started. In real schools, that is rarely true. Some students sign up for tutoring *because* they are already motivated or already doing well. Others are recommended for tutoring *because* a teacher spotted early promise. Either way, the groups were different from day one.\n\nWhen we compare their final scores, we are not just measuring what tutoring added — we are also measuring everything those students brought with them before a single session began.",
-          "markers": [],
+          "content": "Most of us have heard a headline like this and nodded along: *the tutored group scored higher, so tutoring must have helped.* It feels logical. If A comes before B, and B looks better, A must be the reason.\n\nBut here is the catch: the students who received tutoring may have already been different from those who did not — before a single tutoring session happened. In some schools, extra support is directed toward students who are struggling. In others, tutoring is optional or private, and motivated or already high-attaining students may be more likely to sign up. Either way, the two groups are not identical twins waiting to be compared.\n\nWhen the groups start out different, the gap we see in the final scores is a **mixture** — part tutoring effect, part pre-existing difference. Treating the whole gap as proof of tutoring is the misconception we are here to untangle.\n\n[CONTEXT_IMAGE: Two side-by-side panels. Left panel labelled 'What we see': a simple bar chart with 'Tutored' bar taller than 'Not Tutored' bar, a bold bracket marking the gap, and a question mark over the bracket. Right panel labelled 'What might be hiding': the same chart but with a translucent orange layer shaded inside the 'Tutored' bar, labelled 'Already different before tutoring'. The viewer should notice that the gap has two possible sources, not one.]",
+          "markers": [
+            "[CONTEXT_IMAGE: Two side-by-side panels. Left panel labelled 'What we see': a simple bar chart with 'Tutored' bar taller than 'Not Tutored' bar, a bold bracket marking the gap, and a question mark over the bracket. Right panel labelled 'What might be hiding': the same chart but with a translucent orange layer shaded inside the 'Tutored' bar, labelled 'Already different before tutoring'. The viewer should notice that the gap has two possible sources, not one.]"
+          ],
           "part": "recall"
         },
         {
           "section": "Two Roads to a Higher Score",
-          "content": "Think of it this way. Three things matter in this story:\n\n- **Prior Achievement ($Z$)** — what a student already knew before tutoring started.\n- **Tutoring Assignment ($T$)** — whether the student received tutoring.\n- **Test Score ($Y$)** — the score we want to understand.\n\nHere is the key insight: *Prior Achievement influences both of the other two variables.* Students with stronger prior achievement are more likely to be assigned to tutoring — and they are also more likely to score well on the test, tutoring or not.\n\nSo when we see tutored students scoring higher, there are two possible roads that score gap could have travelled:\n\n1. **The tutoring road:** Tutoring → better test score. *(This is what we hope is true.)*\n2. **The hidden road:** Strong prior achievement → selected for tutoring, AND strong prior achievement → higher test score anyway.\n\nBoth roads lead to the same destination — a score gap — but only the first one means tutoring deserves the credit. Just looking at the report, we cannot tell which road did the heavy lifting.\n\n[CONTEXT_IMAGE: Two parallel roads drawn in a simple flat illustration style. Road 1 is labelled 'Tutoring Road' and shows a student icon walking through a tutoring session icon to reach a trophy icon for 'High Score'. Road 2 is labelled 'Hidden Road' and shows the same student icon already carrying a backpack labelled 'Strong Start', bypassing the tutoring session entirely and also reaching the same trophy. Both roads end at the same trophy, emphasising that the destination looks identical from the outside.]",
-          "markers": [
-            "[CONTEXT_IMAGE: Two parallel roads drawn in a simple flat illustration style. Road 1 is labelled 'Tutoring Road' and shows a student icon walking through a tutoring session icon to reach a trophy icon for 'High Score'. Road 2 is labelled 'Hidden Road' and shows the same student icon already carrying a backpack labelled 'Strong Start', bypassing the tutoring session entirely and also reaching the same trophy. Both roads end at the same trophy, emphasising that the destination looks identical from the outside.]"
-          ],
+          "content": "Our story has three characters.\n\n- **PriorAchievement ($Z$):** what a student already knew before tutoring began.\n- **TutoringAssignment ($T$):** whether that student ended up receiving tutoring.\n- **TestScore ($Y$):** the later score we want to understand.\n\nHere is the key move: PriorAchievement does not just affect the final test score directly — it also influences who gets tutoring in the first place. That gives us **two roads** from PriorAchievement to TestScore.\n\n**Road 1 — The direct road:** A student who already knew a lot walks into the test with an advantage, tutoring or not.\n\n**Road 2 — The tutoring road:** Prior achievement shapes whether a student is assigned tutoring, and tutoring then shapes the score.\n\nWhen we simply compare the tutored group to the non-tutored group, we are measuring the combined effect of *both roads at once*. The raw gap in the bar chart blends them together. To isolate what tutoring itself does, we need to somehow balance prior achievement across the two groups on average — or, better still, change the assignment rule ourselves so that prior achievement no longer decides who gets tutoring.\n\nThat second idea — changing the rule ourselves — is what researchers call an **intervention**, written `do(TutoringAssignment := assigned by coin flip)`. When we do that, we break the link between prior achievement and tutoring assignment. The bar chart gap we see *after* that kind of intervention would give us a much cleaner estimate of what tutoring itself changes. Observational data — the kind the school report used — can only answer that question if we make careful additional assumptions about how the groups were formed.",
+          "markers": [],
           "part": "intuition"
         },
         {
-          "section": "Seeing the Hidden Driver",
-          "content": "Here is the causal map for our story. The arrows show which variable influences which.\n\n```mermaid\ngraph LR\n    Z[PriorAchievement] --> T[TutoringAssignment]\n    Z[PriorAchievement] --> Y[TestScore]\n    T[TutoringAssignment] --> Y[TestScore]\n```\n\nNotice that **PriorAchievement ($Z$)** has arrows pointing to *both* TutoringAssignment and TestScore. That makes it a hidden driver — it quietly shapes both sides of the comparison at the same time. When a variable does this, causal scientists call it a *confounder*.\n\nThe school report only showed us the arrow from T to Y. It did not — and could not — automatically separate that arrow from the two arrows flowing through Z.\n\n**So what would actually settle the question?**\n\nImagine a different kind of study: instead of letting prior achievement decide who gets tutoring, we change the rule ourselves — we randomly assign students to tutoring regardless of how they were doing before. In causal language this is written as `do(TutoringAssignment)`, meaning we replace the old assignment rule with our own. When we do that, the arrow from PriorAchievement into TutoringAssignment disappears. The hidden road is closed. Any score gap we see now can only have come through the tutoring road.\n\n[PEDAGOGICAL_IMAGE: Two side-by-side panels with a clean white background. Left panel titled 'What the report shows' displays three rounded rectangles labelled 'Prior Achievement (Z)', 'Tutoring (T)', and 'Test Score (Y)'. Bold orange arrows connect Z to T and Z to Y, and a blue arrow connects T to Y. A highlight box around Z reads 'Hidden driver flows here too'. Right panel titled 'If we randomly assign tutoring' shows the same three rectangles, but the orange arrow from Z to T is crossed out with a red X, leaving only the Z-to-Y orange arrow and the blue T-to-Y arrow intact. A label beneath the crossed arrow reads 'Rule changed — hidden road closed'. Both panels use the same colour coding so the difference is immediately obvious.]",
+          "section": "See the Structure",
+          "content": "The diagram below maps the three characters and their connections.\n\n```mermaid\ngraph LR\n    Z[PriorAchievement] --> T[TutoringAssignment]\n    Z[PriorAchievement] --> Y[TestScore]\n    T[TutoringAssignment] --> Y[TestScore]\n```\n\nNotice that PriorAchievement sits at the top of both paths. It is the hidden driver that touches both sides of the comparison.\n\n[PEDAGOGICAL_IMAGE: Three cards arranged in a triangle. The top card reads 'Prior Achievement'. A solid road runs from it down-left to a card reading 'Tutoring Assignment', and another solid road runs from it down-right to a card reading 'Test Score'. A third road runs from 'Tutoring Assignment' across to 'Test Score'. Below the triangle, a before-and-after strip: on the left, the road from 'Prior Achievement' to 'Tutoring Assignment' is intact and labelled 'Observational world — groups already differ'. On the right, that same road has a bold red X painted across it, and a small coin icon sits above 'Tutoring Assignment', labelled 'Intervention world — assignment now independent'. The viewer should notice that cutting one road changes what the score gap can tell us.]\n\nThe bar chart the school published lives in the *observational world* — the left panel. Both roads are open. The gap between the bars is real, but it carries the fingerprints of prior achievement as well as tutoring. Only in the *intervention world* — the right panel — does the gap speak much more directly about tutoring itself.",
           "markers": [
-            "[PEDAGOGICAL_IMAGE: Two side-by-side panels with a clean white background. Left panel titled 'What the report shows' displays three rounded rectangles labelled 'Prior Achievement (Z)', 'Tutoring (T)', and 'Test Score (Y)'. Bold orange arrows connect Z to T and Z to Y, and a blue arrow connects T to Y. A highlight box around Z reads 'Hidden driver flows here too'. Right panel titled 'If we randomly assign tutoring' shows the same three rectangles, but the orange arrow from Z to T is crossed out with a red X, leaving only the Z-to-Y orange arrow and the blue T-to-Y arrow intact. A label beneath the crossed arrow reads 'Rule changed — hidden road closed'. Both panels use the same colour coding so the difference is immediately obvious.]"
+            "[PEDAGOGICAL_IMAGE: Three cards arranged in a triangle. The top card reads 'Prior Achievement'. A solid road runs from it down-left to a card reading 'Tutoring Assignment', and another solid road runs from it down-right to a card reading 'Test Score'. A third road runs from 'Tutoring Assignment' across to 'Test Score'. Below the triangle, a before-and-after strip: on the left, the road from 'Prior Achievement' to 'Tutoring Assignment' is intact and labelled 'Observational world — groups already differ'. On the right, that same road has a bold red X painted across it, and a small coin icon sits above 'Tutoring Assignment', labelled 'Intervention world — assignment now independent'. The viewer should notice that cutting one road changes what the score gap can tell us.]"
           ],
           "part": "visual"
         },
         {
           "section": "Check Your Understanding",
-          "content": "**Question 1.** The school report shows tutored students scored higher. What is the *safest* conclusion to draw?\n\nA. Tutoring definitely caused the higher scores.\nB. There is a pattern, but prior achievement might explain part of the gap.\nC. Prior achievement is the only reason for the gap.\nD. The test was too easy for the tutored group.\n\n---\n\n**Question 2.** In the causal map, PriorAchievement has arrows pointing to both TutoringAssignment and TestScore. What does this make it?\n\nA. A hidden driver that influences both sides of the comparison.\nB. An outcome we are trying to explain.\nC. A variable that tutoring controls.\nD. An irrelevant background detail.\n\n---\n\n**Question 3.** A researcher randomly assigns students to tutoring, ignoring their prior achievement entirely. What does this change about the causal map?\n\nA. It removes the arrow from TutoringAssignment to TestScore.\nB. It removes the arrow from PriorAchievement to TestScore.\nC. It removes the arrow from PriorAchievement to TutoringAssignment.\nD. It adds a new arrow from TestScore back to TutoringAssignment.\n\n---\n\n<details>\n<summary>Show Answers</summary>\n\n**Answer 1: B.** The report shows a pattern, but because students with higher prior achievement were more likely to receive tutoring, the gap could partly reflect what they brought in — not only what tutoring added.\n\n**Answer 2: A.** When one variable points to both the treatment and the outcome, it can secretly drive the comparison. That is exactly what a confounder does.\n\n**Answer 3: C.** Random assignment means prior achievement no longer decides who gets tutoring, so the arrow from PriorAchievement into TutoringAssignment is replaced by the researcher's coin flip. The hidden road is closed.\n\n</details>",
+          "content": "**Question 1.** The school report shows that tutored students scored 12 points higher on average. What is the most accurate conclusion?\n\nA. Tutoring caused exactly 12 extra points.\nB. The 12-point gap may include a pre-existing difference between the groups, not just a tutoring effect.\nC. The school should immediately stop tutoring because the data is unreliable.\nD. Prior achievement has no effect on test scores.\n\n---\n\n**Question 2.** In our three-variable story, PriorAchievement influences both TutoringAssignment and TestScore. What do we call a variable that does this — sitting upstream of both the treatment and the outcome?\n\nA. A hidden driver that feeds into both sides of the comparison.\nB. The outcome variable.\nC. The treatment variable.\nD. A variable that only matters after the test.\n\n---\n\n**Question 3.** A researcher decides to assign tutoring by a random lottery, so that prior achievement no longer determines who gets tutoring. What does this change?\n\nA. It makes the test scores disappear from the data.\nB. It removes the direct effect of tutoring on test scores.\nC. It breaks the link between prior achievement and tutoring assignment, so the score gap can more cleanly reflect tutoring's effect.\nD. It proves that prior achievement was never important.\n\n---\n\n<details>\n<summary>Show Answers</summary>\n\n**Answer 1: B.** The raw gap blends the tutoring effect with any pre-existing difference between the groups. We cannot read off a pure tutoring effect from the bar chart alone.\n\n**Answer 2: A.** A variable that sits upstream of both the treatment and the outcome is the hidden driver — it shapes who gets treated and also directly affects the outcome, mixing two influences into the comparison.\n\n**Answer 3: C.** Random assignment breaks the road from PriorAchievement to TutoringAssignment. With that link cut, the groups are no longer sorted by prior achievement before tutoring starts, so the score gap can more cleanly reflect what tutoring itself does.\n\n</details>",
           "markers": [],
           "part": "checkpoint"
         }
@@ -164,33 +165,35 @@
       "sections": [
         {
           "section": "Changing the Rule",
-          "content": "> After this mini lesson, you will be able to:\n> - Explain what it means to *change the assignment rule* for who gets tutoring\n> - Describe how a coin-flip assignment cuts the link from PriorAchievement to TutoringAssignment\n> - Say why the score difference we see *after* changing the rule is a cleaner measure of tutoring's own effect\n\nImagine a school that has always let high-achieving students sign up for tutoring first. When you look at the report later, tutored students scored higher — but were they already ahead to begin with? In the previous lesson we saw that PriorAchievement ($Z$) quietly shapes both who gets tutoring and how students score. That hidden link makes it hard to give tutoring the credit — or the blame.\n\nThis lesson is about one powerful move: instead of *observing* who ended up in tutoring, we *decide* who gets it ourselves, using something like a coin flip. That single change rewrites the story.\n\n[CONTEXT_IMAGE: A split scene. On the left, a school hallway where students with gold stars on their folders walk toward a 'Tutoring Room' sign, suggesting self-selection by ability. On the right, a teacher flipping a large coin in front of a mixed group of students — some with gold stars, some without — all looking at the coin. A caption reads: 'Left: students choose. Right: the coin chooses.' Warm classroom lighting, simple flat-illustration style.]",
+          "content": "> **After this mini lesson, you will be able to:**\n> - Explain what it means to *change the assignment rule* for who gets tutoring.\n> - Describe why flipping a coin to assign tutoring gives a cleaner picture than just watching who happened to get it.\n> - Identify which link in the diagram disappears when we intervene on tutoring assignment.\n\nImagine a school report lands on your desk. Students who got tutoring scored higher. Great news — but wait. Were those students already different before tutoring started? If so, the score gap might be telling us partly about *prior knowledge*, not tutoring alone.\n\nIn the last lesson we saw how PriorAchievement ($Z$) quietly shapes both who gets tutoring and how students score. This lesson is about a simple but powerful move: **what if we take that decision out of the school's hands entirely and flip a coin instead?**\n\n[CONTEXT_IMAGE: A split photograph. On the left, a school administrator at a desk reviewing student files and circling names — representing a selection process tied to student background. On the right, a large physical coin mid-flip above a list of student names, with half highlighted in one colour and half in another — representing random assignment. A caption beneath each panel reads 'Who happened to get tutoring' and 'Who we decided to assign by coin flip'. The contrast should feel immediate and concrete.]",
           "markers": [
-            "[CONTEXT_IMAGE: A split scene. On the left, a school hallway where students with gold stars on their folders walk toward a 'Tutoring Room' sign, suggesting self-selection by ability. On the right, a teacher flipping a large coin in front of a mixed group of students — some with gold stars, some without — all looking at the coin. A caption reads: 'Left: students choose. Right: the coin chooses.' Warm classroom lighting, simple flat-illustration style.]"
+            "[CONTEXT_IMAGE: A split photograph. On the left, a school administrator at a desk reviewing student files and circling names — representing a selection process tied to student background. On the right, a large physical coin mid-flip above a list of student names, with half highlighted in one colour and half in another — representing random assignment. A caption beneath each panel reads 'Who happened to get tutoring' and 'Who we decided to assign by coin flip'. The contrast should feel immediate and concrete.]"
           ],
           "part": "hook"
         },
         {
           "section": "Before We Dive In",
-          "content": "**A common mix-up worth clearing up first.**\n\nMany people think: *'If I just look only at the students who happened to get tutoring, I can see what tutoring does.'* It feels logical — you are focusing on the tutored group, after all.\n\nBut here is the catch: those students did not end up in tutoring by chance. PriorAchievement ($Z$) influenced who was assigned tutoring ($T$). So the tutored group is already a special group — likely stronger students to begin with. Filtering your view to that group does not remove the influence of prior achievement; it just hides it from sight.\n\nChanging the rule is something different. It means we step in and *replace* how tutoring gets assigned — so prior achievement no longer has any say in who receives it.",
+          "content": "Here is the most common mix-up at this step:\n\n**'If I just look at students who received tutoring, isn't that the same as studying what tutoring does?'**\n\nIt feels that way — but it is not. When you *filter* to students who received tutoring, you are looking at a group that may already differ from everyone else. Some schools direct extra support toward students who are struggling; other settings see motivated or already high-attaining students opt in. Either way, the group you end up studying is shaped by something other than tutoring itself.\n\nAssigning tutoring *by design* — say, by coin flip — is a completely different operation. You are no longer describing a group that happened to receive tutoring. You are *creating* the groups yourself, on your own terms, so that prior achievement no longer determines who ends up where.",
           "markers": [],
           "part": "recall"
         },
         {
-          "section": "What 'Changing the Rule' Actually Means",
-          "content": "In the original story, the assignment rule for TutoringAssignment ($T$) was something like: *'Students with higher prior achievement are more likely to get a spot.'* That rule is the arrow from Z to T in our graph.\n\nWhen we change the rule — say, by flipping a coin for every student — we replace that rule entirely. The coin does not know anything about a student's prior achievement. So prior achievement no longer has any power over who gets tutoring. The arrow from Z to T is gone. This is what researchers call a **hard intervention**: one assignment mechanism is swapped out, and the old inputs to that mechanism lose their grip.\n\nShorthand for this idea: **do(TutoringAssignment := coin flip)** — the `do(...)` is just a compact way of saying *'we changed the rule ourselves.'*\n\nNow compare two groups: students whose coin landed on tutoring, and students whose coin landed on no tutoring. Because the coin ignored prior achievement, both groups are, on average, equally mixed in ability. Any difference in TestScore ($Y$) between the two groups can no longer be blamed on prior achievement sneaking in. What remains is tutoring's own effect — clean and direct.",
+          "section": "Flipping the Coin: What Really Changes",
+          "content": "Picture the original situation. The school uses student records to decide who gets tutoring. That means PriorAchievement ($Z$) is quietly steering TutoringAssignment ($T$). Students with certain backgrounds are more or less likely to be assigned — and that background *also* affects TestScore ($Y$). So when we compare tutored and non-tutored students, we are tangled up with Z the whole time.\n\nNow picture a researcher stepping in and saying: **'We are going to flip a coin for every student. Heads gets tutoring, tails does not.'** The school's old rule — the one that connected prior achievement to tutoring assignment — is gone. It has been *replaced*. This replacement is what researchers call an **intervention**: not just observing who got tutoring, but actively deciding who gets it regardless of background.\n\nThis is the one place we will use the shorthand `do(TutoringAssignment := coin flip)`. The `do(...)` notation is simply a compact way of writing 'we change the rule ourselves.' After that change, the coin is the only thing determining T. Prior achievement still affects test scores directly — that link stays — but it no longer has any say in who gets tutoring. The score gap we measure now is a much cleaner picture of what tutoring itself does.\n\n**What stays the same:** PriorAchievement still influences TestScore. TutoringAssignment still influences TestScore. Those two links are untouched.\n\n**What disappears:** The link from PriorAchievement to TutoringAssignment. Once we set the rule ourselves, that connection is cut.",
           "markers": [],
           "part": "intuition"
         },
         {
-          "section": "See the Arrow Disappear",
-          "content": "Here is the original causal graph, with all three arrows in place:\n\n```mermaid\ngraph LR\n    Z[PriorAchievement Z] --> T[TutoringAssignment T]\n    Z --> Y[TestScore Y]\n    T --> Y\n```",
-          "markers": [],
+          "section": "See It in the Diagram",
+          "content": "The diagram below shows the original three-variable picture on the left, and what happens after the intervention on the right. Only one thing changes.\n\n**Original world — observational:**\n\n```mermaid\ngraph LR\n    Z[PriorAchievement Z] --> T[TutoringAssignment T]\n    Z --> Y[TestScore Y]\n    T --> Y\n```\n\n**After the intervention — we set the rule ourselves:**\n\n```mermaid\ngraph LR\n    Z[PriorAchievement Z] -. cut .- T[TutoringAssignment T]\n    Z --> Y[TestScore Y]\n    T --> Y\n```\n\nThe dashed line marks the link that is removed. Z no longer reaches T. The coin flip has replaced whatever rule was there before.\n\n[PEDAGOGICAL_IMAGE: Two side-by-side panels styled like museum exhibit cards. The left panel is labelled 'Before: school decides' and shows three rectangular cards — one labelled 'Prior Achievement', one labelled 'Tutoring Assignment', one labelled 'Test Score'. A solid road connects 'Prior Achievement' to 'Tutoring Assignment' and another solid road connects 'Prior Achievement' to 'Test Score'. A third solid road connects 'Tutoring Assignment' to 'Test Score'. The right panel is labelled 'After: coin flip decides' and shows the same three cards and the same roads, except the road between 'Prior Achievement' and 'Tutoring Assignment' is crossed out with a bold red X and a small coin icon sits above the 'Tutoring Assignment' card. The viewer should immediately notice that only one road has been cut and the other two remain intact.]",
+          "markers": [
+            "[PEDAGOGICAL_IMAGE: Two side-by-side panels styled like museum exhibit cards. The left panel is labelled 'Before: school decides' and shows three rectangular cards — one labelled 'Prior Achievement', one labelled 'Tutoring Assignment', one labelled 'Test Score'. A solid road connects 'Prior Achievement' to 'Tutoring Assignment' and another solid road connects 'Prior Achievement' to 'Test Score'. A third solid road connects 'Tutoring Assignment' to 'Test Score'. The right panel is labelled 'After: coin flip decides' and shows the same three cards and the same roads, except the road between 'Prior Achievement' and 'Tutoring Assignment' is crossed out with a bold red X and a small coin icon sits above the 'Tutoring Assignment' card. The viewer should immediately notice that only one road has been cut and the other two remain intact.]"
+          ],
           "part": "visual"
         },
         {
           "section": "Check Your Understanding",
-          "content": "**Question 1.** When we assign tutoring by coin flip, what happens to the arrow from PriorAchievement ($Z$) to TutoringAssignment ($T$)?\n\nA. It gets stronger because more students are involved.\nB. It is cut — prior achievement no longer determines who gets tutoring.\nC. It reverses direction, so tutoring now affects prior achievement.\nD. Nothing changes; the arrow stays exactly as it was.\n\n---\n\n**Question 2.** After the coin-flip assignment, we compare the average TestScore ($Y$) of tutored students with the average TestScore of non-tutored students. What does a difference in scores most likely reflect now?\n\nA. The effect of tutoring itself, because prior achievement is no longer steering who got it.\nB. The fact that high-achieving students still signed up for tutoring on their own.\nC. A mistake in the coin flip, because scores should always be equal.\nD. The direct effect of prior achievement on test scores.\n\n---\n\n**Question 3.** A friend says: 'I can get the same clean answer by just looking only at the low-achieving students who happened to attend tutoring.' What is the problem with this plan?\n\nA. There are not enough low-achieving students to study.\nB. Low-achieving students never attend tutoring.\nC. Filtering to students who happened to attend tutoring still reflects the original assignment rule — prior achievement still influenced who ended up there.\nD. It would work perfectly; filtering and coin-flip assignment give identical results.\n\n---\n\n<details>\n<summary>Show Answers</summary>\n\n**Answer 1: B.** Changing the rule to a coin flip replaces the old mechanism entirely. Prior achievement no longer has any path into TutoringAssignment, so that arrow is cut.\n\n**Answer 2: A.** Because the coin ignored prior achievement, both groups are comparably mixed in ability on average. A score difference between them points to tutoring as the cause, not a pre-existing ability gap.\n\n**Answer 3: C.** Filtering to students who *happened* to attend tutoring does not remove the original rule — those students were still selected partly because of their prior achievement. Only replacing the rule itself (for example, with a coin flip) breaks that link.\n\n</details>",
+          "content": "**Question 1.** A researcher uses a coin flip to decide which students get tutoring. What does this change compared to letting the school assign tutoring as usual?\n\n- A. It removes the link between TutoringAssignment and TestScore.\n- B. It removes the link between PriorAchievement and TutoringAssignment.\n- C. It removes the link between PriorAchievement and TestScore.\n- D. It removes all three links at once.\n\n---\n\n**Question 2.** After the coin-flip intervention, a student who seemed likely to be selected under the old school rule is assigned to the non-tutoring group. Is that possible?\n\n- A. Yes — the coin decides, so any student can end up in either group.\n- B. No — the original school rule still decides every assignment.\n- C. No — prior achievement still controls tutoring assignment.\n- D. Only if the school approves the coin result.\n\n---\n\n**Question 3.** Which of the following best describes what `do(TutoringAssignment := coin flip)` means in plain language?\n\n- A. We observe which students chose to attend tutoring on their own.\n- B. We filter the data to students who happened to receive tutoring.\n- C. We replace the old assignment rule with our own rule — a coin flip — regardless of student background.\n- D. We remove the effect of tutoring from the test scores after the fact.\n\n---\n\n<details>\n<summary>Show Answers</summary>\n\n**Answer 1: B.** The coin flip replaces the school's rule, so prior achievement no longer determines who gets tutoring. That is the one link that disappears. The other two links stay intact.\n\n**Answer 2: A.** Once the coin decides, prior achievement has no say in the assignment. Any student can land in either group.\n\n**Answer 3: C.** `do(...)` is shorthand for changing the rule ourselves. We are not filtering or adjusting after the fact; we are replacing the original assignment mechanism with our own.\n\n</details>",
           "markers": [],
           "part": "checkpoint"
         }
@@ -200,7 +203,7 @@
   "image_refs": [
     {
       "node_title": "The Tutoring Puzzle",
-      "description": "A bright school noticeboard displaying a bar chart with two bars side by side. Left bar labelled 'No Tutoring', right bar labelled 'Tutoring', the right bar clearly taller. A cartoon magnifying glass hovers over the gap between the bars, with a question mark inside the lens. Warm classroom colours, friendly and inviting.",
+      "description": "A school noticeboard with a printed bar chart pinned to it. Two bars side by side, labelled 'Tutored' and 'Not Tutored', with the 'Tutored' bar clearly taller. A small crowd of illustrated students of mixed ability levels stands in front of the board, some looking surprised, some sceptical. Warm classroom lighting. The viewer should notice the gap between the bars and wonder what is behind it.",
       "kind": "CONTEXT_IMAGE",
       "aspect_ratio": "4:3",
       "section": "The Tutoring Puzzle",
@@ -209,29 +212,38 @@
     },
     {
       "node_title": "The Tutoring Puzzle",
-      "description": "Two parallel roads drawn in a simple flat illustration style. Road 1 is labelled 'Tutoring Road' and shows a student icon walking through a tutoring session icon to reach a trophy icon for 'High Score'. Road 2 is labelled 'Hidden Road' and shows the same student icon already carrying a backpack labelled 'Strong Start', bypassing the tutoring session entirely and also reaching the same trophy. Both roads end at the same trophy, emphasising that the destination looks identical from the outside.",
+      "description": "Two side-by-side panels. Left panel labelled 'What we see': a simple bar chart with 'Tutored' bar taller than 'Not Tutored' bar, a bold bracket marking the gap, and a question mark over the bracket. Right panel labelled 'What might be hiding': the same chart but with a translucent orange layer shaded inside the 'Tutored' bar, labelled 'Already different before tutoring'. The viewer should notice that the gap has two possible sources, not one.",
       "kind": "CONTEXT_IMAGE",
       "aspect_ratio": "4:3",
-      "section": "Two Roads to a Higher Score",
+      "section": "Before We Dive In",
       "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_0/passive_courses/interventions/imgs/img_01.png",
       "model": "openai/gpt-5.4-image-2"
     },
     {
       "node_title": "The Tutoring Puzzle",
-      "description": "Two side-by-side panels with a clean white background. Left panel titled 'What the report shows' displays three rounded rectangles labelled 'Prior Achievement (Z)', 'Tutoring (T)', and 'Test Score (Y)'. Bold orange arrows connect Z to T and Z to Y, and a blue arrow connects T to Y. A highlight box around Z reads 'Hidden driver flows here too'. Right panel titled 'If we randomly assign tutoring' shows the same three rectangles, but the orange arrow from Z to T is crossed out with a red X, leaving only the Z-to-Y orange arrow and the blue T-to-Y arrow intact. A label beneath the crossed arrow reads 'Rule changed — hidden road closed'. Both panels use the same colour coding so the difference is immediately obvious.",
+      "description": "Three cards arranged in a triangle. The top card reads 'Prior Achievement'. A solid road runs from it down-left to a card reading 'Tutoring Assignment', and another solid road runs from it down-right to a card reading 'Test Score'. A third road runs from 'Tutoring Assignment' across to 'Test Score'. Below the triangle, a before-and-after strip: on the left, the road from 'Prior Achievement' to 'Tutoring Assignment' is intact and labelled 'Observational world — groups already differ'. On the right, that same road has a bold red X painted across it, and a small coin icon sits above 'Tutoring Assignment', labelled 'Intervention world — assignment now independent'. The viewer should notice that cutting one road changes what the score gap can tell us.",
       "kind": "PEDAGOGICAL_IMAGE",
       "aspect_ratio": "4:3",
-      "section": "Seeing the Hidden Driver",
+      "section": "See the Structure",
       "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_0/passive_courses/interventions/imgs/img_02.png",
       "model": "openai/gpt-5.4-image-2"
     },
     {
       "node_title": "Changing the Rule",
-      "description": "A split scene. On the left, a school hallway where students with gold stars on their folders walk toward a 'Tutoring Room' sign, suggesting self-selection by ability. On the right, a teacher flipping a large coin in front of a mixed group of students — some with gold stars, some without — all looking at the coin. A caption reads: 'Left: students choose. Right: the coin chooses.' Warm classroom lighting, simple flat-illustration style.",
+      "description": "A split photograph. On the left, a school administrator at a desk reviewing student files and circling names — representing a selection process tied to student background. On the right, a large physical coin mid-flip above a list of student names, with half highlighted in one colour and half in another — representing random assignment. A caption beneath each panel reads 'Who happened to get tutoring' and 'Who we decided to assign by coin flip'. The contrast should feel immediate and concrete.",
       "kind": "CONTEXT_IMAGE",
       "aspect_ratio": "4:3",
       "section": "Changing the Rule",
       "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_0/passive_courses/interventions/imgs/img_03.png",
+      "model": "openai/gpt-5.4-image-2"
+    },
+    {
+      "node_title": "Changing the Rule",
+      "description": "Two side-by-side panels styled like museum exhibit cards. The left panel is labelled 'Before: school decides' and shows three rectangular cards — one labelled 'Prior Achievement', one labelled 'Tutoring Assignment', one labelled 'Test Score'. A solid road connects 'Prior Achievement' to 'Tutoring Assignment' and another solid road connects 'Prior Achievement' to 'Test Score'. A third solid road connects 'Tutoring Assignment' to 'Test Score'. The right panel is labelled 'After: coin flip decides' and shows the same three cards and the same roads, except the road between 'Prior Achievement' and 'Tutoring Assignment' is crossed out with a bold red X and a small coin icon sits above the 'Tutoring Assignment' card. The viewer should immediately notice that only one road has been cut and the other two remain intact.",
+      "kind": "PEDAGOGICAL_IMAGE",
+      "aspect_ratio": "4:3",
+      "section": "See It in the Diagram",
+      "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_0/passive_courses/interventions/imgs/img_04.png",
       "model": "openai/gpt-5.4-image-2"
     }
   ],
@@ -241,7 +253,7 @@
   "qa_log": [
     {
       "node_title": "The Tutoring Puzzle",
-      "qa_path": "critic-ran",
+      "qa_path": "critic-ran+confirmation",
       "qa_status": "passed",
       "risk": "high",
       "issues": 0,
@@ -253,7 +265,7 @@
       "max_repair_cycles": 3,
       "rewrite_failures": 0,
       "rewrite_log": [],
-      "confirmation_ran": false,
+      "confirmation_ran": true,
       "confirmation_failed": false,
       "escalation_ran": false,
       "escalation_failed": false,
@@ -264,9 +276,9 @@
       "attempts": 18,
       "llm_calls": 18,
       "failed_calls": 0,
-      "prompt_tokens": 106098,
-      "completion_tokens": 9241,
-      "total_tokens": 115339,
+      "prompt_tokens": 107378,
+      "completion_tokens": 9365,
+      "total_tokens": 116743,
       "errors": []
     },
     {
@@ -291,12 +303,12 @@
       "contract_repairs": 0,
       "contract_repair_log": [],
       "dropped_unsupported_issues": 0,
-      "attempts": 14,
-      "llm_calls": 14,
+      "attempts": 17,
+      "llm_calls": 17,
       "failed_calls": 0,
-      "prompt_tokens": 82542,
-      "completion_tokens": 9495,
-      "total_tokens": 92037,
+      "prompt_tokens": 101300,
+      "completion_tokens": 7601,
+      "total_tokens": 108901,
       "errors": []
     }
   ],
