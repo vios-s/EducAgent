@@ -1053,11 +1053,11 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
     {
       icon: 'Book',
       title: 'Start with a story',
-      text: 'Every lesson begins with something familiar: tutoring, hiring, weather, choices, and patterns people already notice.',
+      text: 'Every lesson begins with something familiar: patterns that fits your background and people already notice.',
     },
     {
       icon: 'Target',
-      title: 'Keep moving at your pace',
+      title: 'Moving at your pace',
       text: 'The agent remembers where you got stuck and can step back to the missing idea instead of pushing ahead blindly.',
     },
     {
@@ -1121,7 +1121,7 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
             color: 'var(--ink-soft)',
             fontWeight: 500,
           }}>
-            Causality without the gatekeeping. A friendly agent tutor turns cause-and-effect thinking into small stories, visual maps, and checks anyone can follow.
+            Learn causality with no barrier. A friendly agent tutor turns causal thinking into small stories, visual maps, and checks anyone can follow.
           </p>
           <div className="home-actions" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 30 }}>
             <button className="home-primary-cta" onClick={() => onStart(selectedLearner)} style={{
@@ -1171,7 +1171,7 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
           gap: 10,
         }}>
-          {['No technical background required', 'Built from trusted causal concepts', 'Guided practice, not passive reading', 'Study first, apply later'].map((item, i) => (
+          {['Agents fit your background', 'Built from trusted causal concepts', 'Engaging and motivating for learning', 'Check your learning in real-time'].map((item, i) => (
             <div key={item} style={{
               border: '1px solid var(--line-soft)',
               borderRadius: 8,
@@ -1195,7 +1195,7 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
         <HomeSectionHeader
           eyebrow="Why it feels easier"
           title="A tutor that meets you before the jargon."
-          text="EducAgent is designed for people who want cause-and-effect reasoning to feel usable: learners, teachers, public visitors, and professionals who want a clearer second look."
+          text="EducAgent is designed for people who want to learn causality to feel usable: no matter who you are, agents can adapt."
         />
         <div style={{
           display: 'grid',
@@ -1262,7 +1262,7 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
         <HomeSectionHeader
           eyebrow="Pick a path"
           title="Learn from zero, or bring a question."
-          text="The one-pager frames EducAgent around two modes: Study Mode for guided learning, and Agile Mode for checking causal thinking in real tasks."
+          text="EducAgent is designed around two modes: Study Mode for guided learning, and Agile Mode for checking causal thinking in real tasks."
         />
         <div style={{
           display: 'grid',
@@ -1328,7 +1328,7 @@ function PartnerLinksSection() {
       <HomeSectionHeader
         eyebrow="Project links"
         title="From @VIOS Group, funded by CHAI."
-        text="EducAgent is developed by @VIOS Group at the University of Edinburgh, with support from CHAI. Open the sites here, or scan the QR codes from your phone."
+        text="EducAgent is developed by @VIOS Group at the University of Edinburgh, with support from CHAI. Scan the QR codes from your phone."
       />
       <div style={{
         display: 'grid',
