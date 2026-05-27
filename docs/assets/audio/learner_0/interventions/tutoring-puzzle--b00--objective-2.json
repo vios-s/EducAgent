@@ -1,0 +1,82 @@
+[
+  {
+    "text": "describe",
+    "start": 0.04,
+    "end": 0.53
+  },
+  {
+    "text": "what",
+    "start": 0.53,
+    "end": 0.78
+  },
+  {
+    "text": "it",
+    "start": 0.78,
+    "end": 0.92
+  },
+  {
+    "text": "would",
+    "start": 0.92,
+    "end": 1.25
+  },
+  {
+    "text": "mean",
+    "start": 1.25,
+    "end": 1.51
+  },
+  {
+    "text": "to",
+    "start": 1.51,
+    "end": 1.64
+  },
+  {
+    "text": "truly",
+    "start": 1.64,
+    "end": 1.97
+  },
+  {
+    "text": "change",
+    "start": 1.97,
+    "end": 2.36
+  },
+  {
+    "text": "the",
+    "start": 2.36,
+    "end": 2.56
+  },
+  {
+    "text": "system,",
+    "start": 2.56,
+    "end": 3.11
+  },
+  {
+    "text": "to",
+    "start": 3.19,
+    "end": 3.22
+  },
+  {
+    "text": "find",
+    "start": 3.22,
+    "end": 3.45
+  },
+  {
+    "text": "out",
+    "start": 3.45,
+    "end": 3.57
+  },
+  {
+    "text": "whether",
+    "start": 3.68,
+    "end": 4.03
+  },
+  {
+    "text": "tutoring",
+    "start": 4.03,
+    "end": 4.49
+  },
+  {
+    "text": "works.",
+    "start": 4.49,
+    "end": 4.88
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "text": "Explain",
+    "start": 0.03,
+    "end": 0.46
+  },
+  {
+    "text": "why",
+    "start": 0.46,
+    "end": 0.65
+  },
+  {
+    "text": "a",
+    "start": 0.65,
+    "end": 0.71
+  },
+  {
+    "text": "score",
+    "start": 0.71,
+    "end": 1.04
+  },
+  {
+    "text": "gap",
+    "start": 1.04,
+    "end": 1.23
+  },
+  {
+    "text": "between",
+    "start": 1.23,
+    "end": 1.69
+  },
+  {
+    "text": "two",
+    "start": 1.69,
+    "end": 1.88
+  },
+  {
+    "text": "groups",
+    "start": 1.88,
+    "end": 2.27
+  },
+  {
+    "text": "does",
+    "start": 2.33,
+    "end": 2.62
+  },
+  {
+    "text": "not,",
+    "start": 2.62,
+    "end": 2.86
+  },
+  {
+    "text": "on",
+    "start": 3.05,
+    "end": 3.19
+  },
+  {
+    "text": "its",
+    "start": 3.27,
+    "end": 3.57
+  },
+  {
+    "text": "own,",
+    "start": 3.57,
+    "end": 4
+  },
+  {
+    "text": "prove",
+    "start": 4.06,
+    "end": 4.24
+  },
+  {
+    "text": "that",
+    "start": 4.24,
+    "end": 4.43
+  },
+  {
+    "text": "the",
+    "start": 4.43,
+    "end": 4.57
+  },
+  {
+    "text": "program",
+    "start": 4.57,
+    "end": 4.92
+  },
+  {
+    "text": "caused",
+    "start": 4.95,
+    "end": 5.21
+  },
+  {
+    "text": "the",
+    "start": 5.21,
+    "end": 5.35
+  },
+  {
+    "text": "difference.",
+    "start": 5.35,
+    "end": 6
+  }
+]

@@ -1,0 +1,52 @@
+[
+  {
+    "text": "This",
+    "start": 0.03,
+    "end": 0.2
+  },
+  {
+    "text": "is",
+    "start": 0.25,
+    "end": 0.37
+  },
+  {
+    "text": "the",
+    "start": 0.37,
+    "end": 0.54
+  },
+  {
+    "text": "pre-existing",
+    "start": 0.65,
+    "end": 1.29
+  },
+  {
+    "text": "difference",
+    "start": 1.29,
+    "end": 1.91
+  },
+  {
+    "text": "we",
+    "start": 1.91,
+    "end": 2.03
+  },
+  {
+    "text": "need",
+    "start": 2.03,
+    "end": 2.28
+  },
+  {
+    "text": "to",
+    "start": 2.28,
+    "end": 2.36
+  },
+  {
+    "text": "account",
+    "start": 2.41,
+    "end": 2.83
+  },
+  {
+    "text": "for.",
+    "start": 2.83,
+    "end": 3.11
+  }
+]

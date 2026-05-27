@@ -1,0 +1,47 @@
+[
+  {
+    "text": "Test",
+    "start": 0.03,
+    "end": 0.24
+  },
+  {
+    "text": "score,",
+    "start": 0.25,
+    "end": 0.68
+  },
+  {
+    "text": "the",
+    "start": 0.68,
+    "end": 0.86
+  },
+  {
+    "text": "later",
+    "start": 0.86,
+    "end": 1.15
+  },
+  {
+    "text": "score",
+    "start": 1.17,
+    "end": 1.48
+  },
+  {
+    "text": "we",
+    "start": 1.48,
+    "end": 1.6
+  },
+  {
+    "text": "want",
+    "start": 1.6,
+    "end": 1.84
+  },
+  {
+    "text": "to",
+    "start": 1.87,
+    "end": 1.97
+  },
+  {
+    "text": "understand.",
+    "start": 1.97,
+    "end": 2.64
+  }
+]

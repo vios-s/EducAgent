@@ -1,0 +1,92 @@
+[
+  {
+    "text": "Left",
+    "start": 0.04,
+    "end": 0.23
+  },
+  {
+    "text": "observational",
+    "start": 0.23,
+    "end": 0.99
+  },
+  {
+    "text": "world",
+    "start": 0.99,
+    "end": 1.28
+  },
+  {
+    "text": "where",
+    "start": 1.28,
+    "end": 1.5
+  },
+  {
+    "text": "groups",
+    "start": 1.62,
+    "end": 1.91
+  },
+  {
+    "text": "may",
+    "start": 1.98,
+    "end": 2.05
+  },
+  {
+    "text": "already",
+    "start": 2.09,
+    "end": 2.5
+  },
+  {
+    "text": "differ.",
+    "start": 2.5,
+    "end": 2.97
+  },
+  {
+    "text": "Right,",
+    "start": 3.74,
+    "end": 4.25
+  },
+  {
+    "text": "intervention",
+    "start": 4.25,
+    "end": 5.2
+  },
+  {
+    "text": "world",
+    "start": 5.2,
+    "end": 5.61
+  },
+  {
+    "text": "where",
+    "start": 5.69,
+    "end": 5.87
+  },
+  {
+    "text": "assignment",
+    "start": 5.87,
+    "end": 6.37
+  },
+  {
+    "text": "is",
+    "start": 6.4,
+    "end": 6.56
+  },
+  {
+    "text": "independent",
+    "start": 6.56,
+    "end": 6.67
+  },
+  {
+    "text": "of",
+    "start": 6.67,
+    "end": 7.33
+  },
+  {
+    "text": "prior",
+    "start": 7.47,
+    "end": 7.68
+  },
+  {
+    "text": "achievement.",
+    "start": 7.68,
+    "end": 8.32
+  }
+]

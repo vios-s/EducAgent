@@ -1,0 +1,47 @@
+[
+  {
+    "text": "tutoring",
+    "start": 0.05,
+    "end": 0.6
+  },
+  {
+    "text": "assignment,",
+    "start": 0.67,
+    "end": 1.61
+  },
+  {
+    "text": "whether",
+    "start": 1.61,
+    "end": 1.95
+  },
+  {
+    "text": "that",
+    "start": 1.95,
+    "end": 2.11
+  },
+  {
+    "text": "student",
+    "start": 2.15,
+    "end": 2.48
+  },
+  {
+    "text": "ended",
+    "start": 2.56,
+    "end": 2.88
+  },
+  {
+    "text": "up",
+    "start": 2.88,
+    "end": 2.94
+  },
+  {
+    "text": "receiving",
+    "start": 3.06,
+    "end": 3.58
+  },
+  {
+    "text": "tutoring.",
+    "start": 3.58,
+    "end": 4.12
+  }
+]

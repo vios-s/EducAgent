@@ -1,0 +1,112 @@
+[
+  {
+    "text": "A",
+    "start": 0.04,
+    "end": 0.06
+  },
+  {
+    "text": "school",
+    "start": 0.06,
+    "end": 0.45
+  },
+  {
+    "text": "notice",
+    "start": 0.45,
+    "end": 0.75
+  },
+  {
+    "text": "board",
+    "start": 0.89,
+    "end": 1.17
+  },
+  {
+    "text": "shows",
+    "start": 1.17,
+    "end": 1.5
+  },
+  {
+    "text": "a",
+    "start": 1.5,
+    "end": 1.56
+  },
+  {
+    "text": "score",
+    "start": 1.56,
+    "end": 1.88
+  },
+  {
+    "text": "gap",
+    "start": 1.89,
+    "end": 2.03
+  },
+  {
+    "text": "between",
+    "start": 2.16,
+    "end": 2.4
+  },
+  {
+    "text": "tutored",
+    "start": 2.4,
+    "end": 2.86
+  },
+  {
+    "text": "and",
+    "start": 2.9,
+    "end": 3.04
+  },
+  {
+    "text": "not",
+    "start": 3.04,
+    "end": 3.19
+  },
+  {
+    "text": "tutored",
+    "start": 3.2,
+    "end": 3.94
+  },
+  {
+    "text": "students.",
+    "start": 3.94,
+    "end": 4.82
+  },
+  {
+    "text": "The",
+    "start": 4.87,
+    "end": 5
+  },
+  {
+    "text": "question",
+    "start": 5,
+    "end": 5.49
+  },
+  {
+    "text": "is",
+    "start": 5.49,
+    "end": 5.6
+  },
+  {
+    "text": "what",
+    "start": 5.61,
+    "end": 5.85
+  },
+  {
+    "text": "is",
+    "start": 5.85,
+    "end": 5.92
+  },
+  {
+    "text": "behind",
+    "start": 5.98,
+    "end": 6.34
+  },
+  {
+    "text": "that",
+    "start": 6.34,
+    "end": 6.58
+  },
+  {
+    "text": "gap?",
+    "start": 6.58,
+    "end": 6.85
+  }
+]

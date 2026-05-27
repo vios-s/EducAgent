@@ -1,0 +1,27 @@
+[
+  {
+    "text": "Our",
+    "start": 0.05,
+    "end": 0.19
+  },
+  {
+    "text": "story",
+    "start": 0.19,
+    "end": 0.51
+  },
+  {
+    "text": "has",
+    "start": 0.51,
+    "end": 0.67
+  },
+  {
+    "text": "three",
+    "start": 0.7,
+    "end": 1.02
+  },
+  {
+    "text": "characters.",
+    "start": 1.02,
+    "end": 1.8
+  }
+]

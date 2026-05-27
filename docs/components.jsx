@@ -220,9 +220,7 @@ function NavItem({ item, active, collapsed, onClick }) {
 }
 
 // ---------- Top bar ----------
-function TopBar({ course, selectedLearner, nextLearner, onSwitchLearner, onGoHome, loading }) {
-  const currentLabel = COURSE_CONFIGS[selectedLearner]?.label || selectedLearner;
-  const nextLabel = COURSE_CONFIGS[nextLearner]?.label || nextLearner;
+function TopBar({ course, selectedLearner, onPickLearner, audienceOptions = [], onGoHome, loading }) {
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 20,
@@ -255,20 +253,24 @@ function TopBar({ course, selectedLearner, nextLearner, onSwitchLearner, onGoHom
           </div>
         </button>
         <div style={{ flex: 1 }}/>
-        <button className="learner-switch" style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          width: 42,
-          height: 42,
-          justifyContent: 'center',
-          padding: 0,
-          borderRadius: 12,
-          background: 'var(--ink)',
-          border: '1px solid var(--ink)',
-          color: '#fff',
-          opacity: loading ? 0.72 : 1,
-        }} onClick={onSwitchLearner} disabled={loading} title={`Switch learning profile (${currentLabel} to ${nextLabel})`} aria-label={`Switch learning profile from ${currentLabel} to ${nextLabel}`}>
-          <i className="fa-solid fa-user-graduate" aria-hidden="true" style={{ fontSize: 17, lineHeight: 1 }}/>
-        </button>
+        <div className="audience-segment" role="tablist" aria-label="Choose learning path">
+          {audienceOptions.map((option) => {
+            const active = option.id === selectedLearner;
+            return (
+              <button
+                key={option.id}
+                className={`audience-segment-button${active ? ' is-active' : ''}`}
+                role="tab"
+                aria-selected={active}
+                disabled={loading && !active}
+                onClick={() => onPickLearner(option.id)}
+                title={option.description}
+              >
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
     </header>
   );

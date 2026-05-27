@@ -1,0 +1,42 @@
+[
+  {
+    "text": "This",
+    "start": 0.04,
+    "end": 0.25
+  },
+  {
+    "text": "is",
+    "start": 0.31,
+    "end": 0.43
+  },
+  {
+    "text": "the",
+    "start": 0.43,
+    "end": 0.65
+  },
+  {
+    "text": "effect",
+    "start": 0.65,
+    "end": 1.05
+  },
+  {
+    "text": "we",
+    "start": 1.11,
+    "end": 1.23
+  },
+  {
+    "text": "want",
+    "start": 1.23,
+    "end": 1.5
+  },
+  {
+    "text": "to",
+    "start": 1.52,
+    "end": 1.66
+  },
+  {
+    "text": "isolate.",
+    "start": 1.66,
+    "end": 2.3
+  }
+]

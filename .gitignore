@@ -211,6 +211,7 @@ CLAUDE.md
 
 # local files
 resources/
+.playwright-cli/
 
 # poetry
 poetry.lock

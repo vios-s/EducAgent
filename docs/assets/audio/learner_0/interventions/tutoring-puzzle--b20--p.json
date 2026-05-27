@@ -1,0 +1,172 @@
+[
+  {
+    "text": "The",
+    "start": 0.05,
+    "end": 0.2
+  },
+  {
+    "text": "bar",
+    "start": 0.2,
+    "end": 0.34
+  },
+  {
+    "text": "chart",
+    "start": 0.4,
+    "end": 0.73
+  },
+  {
+    "text": "the",
+    "start": 0.73,
+    "end": 0.93
+  },
+  {
+    "text": "school",
+    "start": 0.93,
+    "end": 1.33
+  },
+  {
+    "text": "published",
+    "start": 1.33,
+    "end": 1.93
+  },
+  {
+    "text": "lives",
+    "start": 1.93,
+    "end": 2.26
+  },
+  {
+    "text": "in",
+    "start": 2.26,
+    "end": 2.38
+  },
+  {
+    "text": "the",
+    "start": 2.4,
+    "end": 2.59
+  },
+  {
+    "text": "observational",
+    "start": 2.59,
+    "end": 3.26
+  },
+  {
+    "text": "world.",
+    "start": 3.43,
+    "end": 3.9
+  },
+  {
+    "text": "Both",
+    "start": 3.95,
+    "end": 4.35
+  },
+  {
+    "text": "roads",
+    "start": 4.37,
+    "end": 4.96
+  },
+  {
+    "text": "are",
+    "start": 4.96,
+    "end": 5.3
+  },
+  {
+    "text": "open.",
+    "start": 5.32,
+    "end": 5.84
+  },
+  {
+    "text": "The",
+    "start": 5.89,
+    "end": 6.07
+  },
+  {
+    "text": "gap",
+    "start": 6.07,
+    "end": 6.29
+  },
+  {
+    "text": "between",
+    "start": 6.29,
+    "end": 6.84
+  },
+  {
+    "text": "the",
+    "start": 6.84,
+    "end": 7.07
+  },
+  {
+    "text": "bars",
+    "start": 7.07,
+    "end": 7.37
+  },
+  {
+    "text": "is",
+    "start": 7.38,
+    "end": 7.53
+  },
+  {
+    "text": "real,",
+    "start": 7.53,
+    "end": 7.9
+  },
+  {
+    "text": "but",
+    "start": 7.9,
+    "end": 8.04
+  },
+  {
+    "text": "it",
+    "start": 8.04,
+    "end": 8.12
+  },
+  {
+    "text": "carries",
+    "start": 8.16,
+    "end": 8.48
+  },
+  {
+    "text": "the",
+    "start": 8.48,
+    "end": 8.61
+  },
+  {
+    "text": "fingerprints",
+    "start": 8.61,
+    "end": 9.1
+  },
+  {
+    "text": "of",
+    "start": 9.13,
+    "end": 9.19
+  },
+  {
+    "text": "prior",
+    "start": 9.27,
+    "end": 9.32
+  },
+  {
+    "text": "achievement",
+    "start": 9.78,
+    "end": 10.2
+  },
+  {
+    "text": "as",
+    "start": 10.25,
+    "end": 10.3
+  },
+  {
+    "text": "well",
+    "start": 10.3,
+    "end": 10.51
+  },
+  {
+    "text": "as",
+    "start": 10.51,
+    "end": 10.61
+  },
+  {
+    "text": "tutoring.",
+    "start": 10.61,
+    "end": 11.2
+  }
+]
