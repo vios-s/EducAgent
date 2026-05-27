@@ -13,7 +13,7 @@ The demo is designed for CHAI Fest visitors and other public audiences who may b
   - **For everyone**: a beginner lesson built around the tutoring puzzle.
   - **CS student**: a DAG course shell for learners with a computing background.
   - **Healthcare**: a non-diagnostic CHAI bridge about clinic reminders and appointment attendance.
-- Separate expert trust and 30-second feedback pages at `#expert` and `#feedback`.
+- A 30-second feedback page at `#feedback`.
 - Mobile-friendly lesson layout and homepage sections.
 - Project links for @VIOS Group at the University of Edinburgh and CHAI funding support.
 

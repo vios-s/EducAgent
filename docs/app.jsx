@@ -351,6 +351,7 @@ function CalloutBlock({ tone, icon, title, text, audioEntry, audioPlayer, audioQ
 function VariableCards({ items, audioEntries = [], audioPlayer, audioQueue }) {
   const colorMap = {
     sun:     { bg: 'var(--sun-soft)',     ink: 'var(--primary)', dot: 'var(--sun)' },
+    plum:    { bg: 'var(--plum-soft)',    ink: 'var(--plum)',    dot: 'var(--plum)' },
     primary: { bg: 'var(--primary-soft)', ink: 'var(--primary)', dot: 'var(--primary)' },
     accent:  { bg: 'var(--accent-soft)',  ink: 'var(--accent)',  dot: 'var(--accent)' },
   };
@@ -821,6 +822,67 @@ function cleanInline(text) {
     .replace(/\\_/g, '_');
 }
 
+function svgLabelLines(label) {
+  return String(label || '')
+    .split('\n')
+    .flatMap((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return [];
+      if (trimmed.length <= 14 || !trimmed.includes(' ')) return [trimmed];
+      const words = trimmed.split(/\s+/);
+      const lines = [];
+      let current = '';
+      words.forEach((word) => {
+        const next = current ? `${current} ${word}` : word;
+        if (next.length > 14 && current) {
+          lines.push(current);
+          current = word;
+        } else {
+          current = next;
+        }
+      });
+      if (current) lines.push(current);
+      return lines;
+    });
+}
+
+function fittedSvgFontSize(lines, maxSize, minSize, boxWidth) {
+  const longest = Math.max(1, ...lines.map((line) => line.length));
+  const fitted = boxWidth / (longest * 0.58);
+  return Math.max(minSize, Math.min(maxSize, fitted));
+}
+
+function SvgNodeText({
+  tag,
+  label,
+  tagFill,
+  tagSize = 21,
+  tagY = -12,
+  labelY = 8,
+  labelBoxWidth = 70,
+  labelMaxSize = 9.4,
+  labelMinSize = 7.6,
+  labelWeight = 700,
+}) {
+  const lines = svgLabelLines(label);
+  const labelSize = fittedSvgFontSize(lines, labelMaxSize, labelMinSize, labelBoxWidth);
+  const lineGap = Math.max(labelSize + 2.2, 9.4);
+  const firstLineY = labelY - Math.max(0, lines.length - 2) * (lineGap / 2);
+
+  return (
+    <>
+      <text textAnchor="middle" y={tagY} fontFamily="var(--font-display)" fontWeight="900" fontSize={tagSize} fill={tagFill}>
+        {tag}
+      </text>
+      <text textAnchor="middle" y={firstLineY} fontFamily="var(--font-body)" fontSize={labelSize} fill="var(--ink)" fontWeight={labelWeight}>
+        {lines.map((line, i) => (
+          <tspan key={i} x="0" dy={i === 0 ? 0 : lineGap}>{line}</tspan>
+        ))}
+      </text>
+    </>
+  );
+}
+
 // Causal graph visualization (replaces mermaid)
 function CausalGraph({ intervention = false, graph = null }) {
   // SVG topology: Z --> T, Z --> Y, T --> Y. Scenario labels can change.
@@ -888,13 +950,18 @@ function CausalGraph({ intervention = false, graph = null }) {
         {/* Nodes */}
         {Object.entries(nodes).map(([k, n]) => (
           <g key={k} transform={`translate(${n.x}, ${n.y})`}>
-            <circle r="34" fill={n.bg} stroke={n.color} strokeWidth="2.5"/>
-            <text textAnchor="middle" y="-6" fontFamily="var(--font-display)" fontWeight="800" fontSize="20" fill={n.color}>{n.tag}</text>
-            <text textAnchor="middle" y="14" fontFamily="var(--font-body)" fontSize="9.5" fill="var(--ink)" fontWeight="600">
-              {n.label.split('\n').map((line, i) => (
-                <tspan key={i} x="0" dy={i === 0 ? 0 : 11}>{line}</tspan>
-              ))}
-            </text>
+            <circle r="43" fill={n.bg} stroke={n.color} strokeWidth="2.5"/>
+            <SvgNodeText
+              tag={n.tag}
+              label={n.label}
+              tagFill={n.color}
+              tagSize={21}
+              tagY={-12}
+              labelY={9}
+              labelBoxWidth={70}
+              labelMaxSize={9.4}
+              labelMinSize={7.4}
+            />
           </g>
         ))}
       </svg>
@@ -1016,12 +1083,18 @@ function HiringDagGraph({ variant = 'base' }) {
         {Object.entries(nodes).map(([key, n]) => (
           <g key={key} transform={`translate(${n.x}, ${n.y})`}>
             <rect x="-52" y="-44" width="104" height="88" rx="16" fill={n.bg} stroke={n.color} strokeWidth="2.5"/>
-            <text textAnchor="middle" y="-8" fontFamily="var(--font-display)" fontWeight="800" fontSize="22" fill={n.color}>{n.tag}</text>
-            <text textAnchor="middle" y="13" fontFamily="var(--font-body)" fontSize="10.5" fill="var(--ink)" fontWeight="600">
-              {n.label.split('\n').map((line, i) => (
-                <tspan key={i} x="0" dy={i === 0 ? 0 : 12}>{line}</tspan>
-              ))}
-            </text>
+            <SvgNodeText
+              tag={n.tag}
+              label={n.label}
+              tagFill={n.color}
+              tagSize={22}
+              tagY={-11}
+              labelY={11}
+              labelBoxWidth={88}
+              labelMaxSize={10.5}
+              labelMinSize={8}
+              labelWeight={600}
+            />
           </g>
         ))}
       </svg>
@@ -1883,15 +1956,18 @@ function BoothCausalGraph({ scenario, revealed }) {
 
   const renderNode = (node, x, yPos, hidden) => (
     <g transform={`translate(${x}, ${yPos})`} opacity={hidden ? hiddenOpacity : 1}>
-      <circle r="44" fill={hidden && !revealed ? 'var(--bg-soft)' : node.bg} stroke={hidden ? hiddenStroke : node.color} strokeWidth="2.7"/>
-      <text textAnchor="middle" y="-9" fontFamily="var(--font-display)" fontWeight="900" fontSize="24" fill={hidden ? hiddenStroke : node.color}>
-        {hidden && !revealed ? '?' : node.tag}
-      </text>
-      <text textAnchor="middle" y="14" fontFamily="var(--font-body)" fontSize="10" fill="var(--ink)" fontWeight="700">
-        {(hidden && !revealed ? 'Hidden\nCause?' : node.label).split('\n').map((line, i) => (
-          <tspan key={i} x="0" dy={i === 0 ? 0 : 12}>{line}</tspan>
-        ))}
-      </text>
+      <circle r="47" fill={hidden && !revealed ? 'var(--bg-soft)' : node.bg} stroke={hidden ? hiddenStroke : node.color} strokeWidth="2.7"/>
+      <SvgNodeText
+        tag={hidden && !revealed ? '?' : node.tag}
+        label={hidden && !revealed ? 'Hidden\nCause?' : node.label}
+        tagFill={hidden ? hiddenStroke : node.color}
+        tagSize={24}
+        tagY={-13}
+        labelY={10}
+        labelBoxWidth={78}
+        labelMaxSize={10.2}
+        labelMinSize={8}
+      />
     </g>
   );
 
@@ -2039,190 +2115,6 @@ function BoothQrPanel() {
   );
 }
 
-function ExpertTrustSection() {
-  const live = [
-    'Homepage, Study Mode, and 90-second Booth Mode',
-    'Everyone, CS student, and Healthcare audience paths',
-    'Tutoring and clinic-reminder examples with hidden-cause reveal',
-    'Separate Expert Trust and Feedback pages for booth follow-up',
-  ];
-  const prototype = [
-    'Adaptive tutor behavior and personalized misconception tracking',
-    'Agile Mode for bringing a real causal question',
-    'Multi-agent feedback loop and longitudinal learning record',
-    'Formal learning evaluation study design',
-  ];
-  const concepts = [
-    ['Observation vs action', 'Seeing a pattern compared with changing the assignment rule.'],
-    ['Hidden upstream causes', 'A prior factor can shape both who gets the treatment and the outcome.'],
-    ['Directed causal paths', 'Arrows clarify which routes are open in the story.'],
-    ['Rule replacement', 'Coin-flip assignment removes one incoming road into treatment.'],
-  ];
-  const evaluation = [
-    'Pre/post misconception checks',
-    'Time-to-correct-explanation',
-    'Graph interpretation accuracy',
-    'Think-aloud interviews at the booth',
-    'Follow-up intent and contact quality',
-  ];
-  const questions = [
-    'Which healthcare examples feel safe and familiar without becoming clinical advice?',
-    'Where should rigor be visible for researchers but invisible for public visitors?',
-    'What learning gain would make this worth evaluating formally?',
-    'Which feedback fields should become required before CHAIFest?',
-  ];
-
-  return (
-    <section id="expert" style={{
-      scrollMarginTop: 76,
-      padding: '42px clamp(20px, 5vw, 64px) 64px',
-      background: 'linear-gradient(180deg, var(--bg-soft), var(--surface))',
-      borderBottom: '1px solid var(--line-soft)',
-    }}>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.08fr) minmax(280px, 0.92fr)',
-        gap: 18,
-        alignItems: 'stretch',
-      }} className="expert-hero-grid">
-        <div style={{
-          borderRadius: 8,
-          background: 'var(--ink)',
-          color: '#fff',
-          padding: 'clamp(24px, 4vw, 38px)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          <div style={{ color: 'var(--sun)', fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-            Expert trust page
-          </div>
-          <h2 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(34px, 5.2vw, 58px)',
-            lineHeight: 0.96,
-            letterSpacing: '0',
-            margin: 0,
-            maxWidth: 760,
-          }}>
-            What can a CHAI researcher trust in 60 seconds?
-          </h2>
-          <p style={{ margin: '16px 0 0', color: 'rgba(255,255,255,0.76)', fontSize: 17, lineHeight: 1.58, maxWidth: 720 }}>
-            This page separates live behavior from prototype intent, names the causal ideas being taught, and turns hallway feedback into evaluation questions.
-          </p>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 22 }}>
-            {['Live demo', 'Non-diagnostic healthcare bridge', 'Public-first language'].map((item) => (
-              <span key={item} style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '8px 10px',
-                borderRadius: 999,
-                background: 'rgba(255,255,255,0.1)',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.16)',
-                fontSize: 12.5,
-                fontWeight: 800,
-              }}>
-                <Icon.Check size={13}/> {item}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div style={{
-          border: '1px solid var(--line)',
-          borderRadius: 8,
-          background: 'var(--surface)',
-          padding: 20,
-          boxShadow: 'var(--shadow-sm)',
-          display: 'grid',
-          gap: 12,
-        }}>
-          <ExpertList title="What is live now" items={live}/>
-          <ExpertList title="What is still prototype" items={prototype}/>
-        </div>
-      </div>
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0, 1.1fr) minmax(280px, 0.9fr)',
-        gap: 18,
-        marginTop: 18,
-      }} className="expert-detail-grid">
-        <div style={{
-          border: '1px solid var(--line)',
-          borderRadius: 8,
-          background: 'var(--surface)',
-          padding: 20,
-          boxShadow: 'var(--shadow-sm)',
-        }}>
-          <div style={{ color: 'var(--primary)', fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-            Causal concepts covered
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
-            {concepts.map(([title, text]) => (
-              <div key={title} style={{ border: '1px solid var(--line-soft)', borderRadius: 8, padding: 14, background: 'var(--bg-soft)' }}>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, lineHeight: 1.1 }}>{title}</div>
-                <div style={{ marginTop: 6, color: 'var(--ink-soft)', fontSize: 13.5, lineHeight: 1.45 }}>{text}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={{
-          border: '1px solid var(--line)',
-          borderRadius: 8,
-          background: 'var(--surface)',
-          padding: 20,
-          boxShadow: 'var(--shadow-sm)',
-        }}>
-          <ExpertList title="How we want to evaluate learning" items={evaluation}/>
-        </div>
-      </div>
-
-      <div style={{
-        marginTop: 18,
-        borderRadius: 8,
-        background: 'var(--primary-soft)',
-        border: '1px solid rgba(232,93,44,0.2)',
-        padding: 20,
-      }}>
-        <ExpertList title="Questions for CHAI researchers" items={questions} columns/>
-      </div>
-    </section>
-  );
-}
-
-function ExpertList({ title, items, columns = false }) {
-  return (
-    <div>
-      <h3 style={{
-        fontFamily: 'var(--font-display)',
-        fontSize: 20,
-        lineHeight: 1.1,
-        margin: '0 0 12px',
-      }}>
-        {title}
-      </h3>
-      <ul style={{
-        margin: 0,
-        padding: 0,
-        listStyle: 'none',
-        display: 'grid',
-        gridTemplateColumns: columns ? 'repeat(auto-fit, minmax(230px, 1fr))' : '1fr',
-        gap: 9,
-      }}>
-        {items.map((item) => (
-          <li key={item} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', color: 'var(--ink-soft)', fontSize: 13.8, lineHeight: 1.42 }}>
-            <Icon.Check size={14} style={{ color: 'var(--accent)', marginTop: 2 }}/>
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 function FeedbackSection() {
   const items = ['Role or background', 'Causality familiarity', 'Where it got stuck', 'Follow-up permission'];
   return (
@@ -2338,15 +2230,6 @@ function PageBackBar({ onGoHome }) {
   );
 }
 
-function ExpertPage({ onGoHome }) {
-  return (
-    <div style={{ minHeight: 'calc(100vh - 64px)', background: 'var(--surface)' }}>
-      <PageBackBar onGoHome={onGoHome}/>
-      <ExpertTrustSection/>
-    </div>
-  );
-}
-
 function FeedbackPage({ onGoHome }) {
   return (
     <div style={{ minHeight: 'calc(100vh - 64px)', background: 'var(--surface)' }}>
@@ -2358,7 +2241,7 @@ function FeedbackPage({ onGoHome }) {
 
 // ============ Public homepage ============
 
-function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner, onOpenBooth, onOpenExpert }) {
+function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner, onOpenBooth }) {
   const featureItems = [
     {
       icon: 'Book',
@@ -2614,63 +2497,6 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner, onOp
             button="Coming Soon"
             disabled
           />
-        </div>
-      </section>
-
-      <section style={{
-        padding: '30px clamp(20px, 5vw, 64px)',
-        background: 'var(--ink)',
-        color: '#fff',
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 18,
-          flexWrap: 'wrap',
-        }}>
-          <div style={{ maxWidth: 650 }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              color: 'var(--sun)',
-              fontSize: 12,
-              fontWeight: 900,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              marginBottom: 8,
-            }}>
-              <Icon.Notebook size={14}/> Researcher view
-            </div>
-            <h2 style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(26px, 3.8vw, 40px)',
-              lineHeight: 1,
-              margin: 0,
-              letterSpacing: '0',
-            }}>
-              Need the rigor snapshot for experts?
-            </h2>
-            <p style={{ margin: '10px 0 0', color: 'rgba(255,255,255,0.78)', fontSize: 15.5, lineHeight: 1.55 }}>
-              One page separates live demo scope, prototype claims, causal concepts, evaluation ideas, and questions for CHAI researchers.
-            </p>
-          </div>
-          <button onClick={onOpenExpert} style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 9,
-            minHeight: 48,
-            padding: '13px 16px',
-            borderRadius: 10,
-            background: 'var(--surface)',
-            color: 'var(--ink)',
-            fontWeight: 900,
-            fontSize: 15,
-            whiteSpace: 'nowrap',
-          }}>
-            Expert trust page <Icon.ArrowR size={16}/>
-          </button>
         </div>
       </section>
 
@@ -3011,7 +2837,6 @@ function LearningPathCard({ icon, title, label, text, button, active, disabled, 
 function viewFromHash(hash) {
   if (hash === '#booth') return 'booth';
   if (hash === '#feedback') return 'feedback';
-  if (hash === '#expert') return 'expert';
   return 'home';
 }
 
@@ -3112,7 +2937,6 @@ function App() {
     });
   };
   const openBooth = () => openPage('#booth', 'booth');
-  const openExpert = () => openPage('#expert', 'expert');
   const startLearning = (learnerId = selectedLearner) => {
     setHash('');
     setSelectedLearner(learnerId);
@@ -3127,7 +2951,7 @@ function App() {
   };
 
   useE(() => {
-    if (!['booth', 'feedback', 'expert'].includes(view)) return;
+    if (!['booth', 'feedback'].includes(view)) return;
     window.requestAnimationFrame(() => {
       window.scrollTo({ top: 0, behavior: 'auto' });
     });
@@ -3159,7 +2983,6 @@ function App() {
             onStart={startLearning}
             onPickLearner={setSelectedLearner}
             onOpenBooth={openBooth}
-            onOpenExpert={openExpert}
           />
         )}
 
@@ -3174,10 +2997,6 @@ function App() {
 
         {view === 'feedback' && (
           <FeedbackPage onGoHome={goHome}/>
-        )}
-
-        {view === 'expert' && (
-          <ExpertPage onGoHome={goHome}/>
         )}
 
         {view === 'lesson' && courseState.status === 'error' && (

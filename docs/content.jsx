@@ -210,6 +210,43 @@ const HEALTHCARE_GRAPH = {
   ],
 };
 
+const HEALTHCARE_VARIABLE_CARDS = [
+  {
+    tag: 'Z',
+    label: 'Patient Engagement',
+    desc: 'How engaged, digitally connected, and life-stable a patient already is before any reminder is sent.',
+    color: 'plum',
+  },
+  {
+    tag: 'T',
+    label: 'Received Reminder',
+    desc: "Whether the clinic's system actually sends a text reminder about the appointment.",
+    color: 'primary',
+  },
+  {
+    tag: 'Y',
+    label: 'Attended Appointment',
+    desc: 'Whether the patient walks through the clinic door for that appointment.',
+    color: 'accent',
+  },
+];
+
+const HEALTHCARE_ROADS = [
+  {
+    label: 'The engagement road',
+    desc: 'A patient with a stable routine, a working phone, and a habit of keeping appointments is more likely to show up anyway.',
+    tone: 'sun',
+    note: 'This is the pre-existing difference that can quietly inflate the attendance gap.',
+  },
+  {
+    label: 'The reminder road',
+    desc: 'Patient engagement can shape whether a reminder is received, and the reminder may then shape attendance.',
+    tone: 'primary',
+    hopeful: true,
+    note: 'This is the reminder effect we want to isolate without the hidden driver tilting the comparison.',
+  },
+];
+
 const COURSE_CONFIGS = {
   learner_0: {
     learnerId: 'learner_0',
@@ -230,6 +267,7 @@ const COURSE_CONFIGS = {
     courseKicker: 'CS / ML beginner shell',
     jsonPath: 'data/learner_1/passive_courses/directed-acyclic-graph-dag/content.json',
     imageBase: 'data/learner_1/passive_courses/directed-acyclic-graph-dag/imgs',
+    nodeEmojis: ['↗', '⇄', '○', '⛔'],
     lessons: null,
   },
   learner_8: {
@@ -266,7 +304,7 @@ async function loadLearnerCourse(learnerId) {
 function transformDagContent(data, config) {
   const outlineByTitle = Object.fromEntries((data.outline || []).map((o) => [o.title, o]));
   const imageLookup = buildImageLookup(data.image_refs || [], config.imageBase);
-  const nodeEmojis = config.nodeEmojis || ['↗', '⇄', '○', 'Rule'];
+  const nodeEmojis = config.nodeEmojis || ['↗', '⇄', '○', '⛔'];
   const nodeColors = config.nodeColors || ['accent', 'sun', 'plum', 'accent'];
   const chapterPrefix = config.chapterPrefix || 'DAG';
   const sectionPrefix = config.sectionPrefix || 'DAG';
@@ -293,13 +331,19 @@ function transformDagContent(data, config) {
         eyebrow: `${sectionPrefix} ${nodeIndex + 1}.${sectionIndex + 1}`,
         title: section.section,
       });
-      blocks.push(...sectionContentToBlocks(section.content || '', {
+      const ctx = {
         nodeTitle: node.node_title,
         sectionTitle: section.section,
         imageLookup,
         stripObjectives: sectionIndex === 0,
         graph: config.graph,
-      }));
+        config,
+      };
+      blocks.push(...(
+        config.learnerId === 'learner_8'
+          ? healthcareSectionContentToBlocks(section.content || '', ctx)
+          : sectionContentToBlocks(section.content || '', ctx)
+      ));
     });
 
     return {
@@ -330,6 +374,104 @@ function buildImageLookup(imageRefs, imageBase) {
     lookup.sequential.push(item);
   });
   return lookup;
+}
+
+function imageBlockForSection(ctx) {
+  const image = ctx.imageLookup.byKey[`${ctx.nodeTitle}::${ctx.sectionTitle}`];
+  return image ? { kind: 'figure', ...image } : null;
+}
+
+function pushSectionImage(blocks, ctx) {
+  const image = imageBlockForSection(ctx);
+  if (image) blocks.push(image);
+  return blocks;
+}
+
+function healthcareSectionContentToBlocks(content, ctx) {
+  if (/check your understanding/i.test(ctx.sectionTitle)) {
+    const questions = parseQuizQuestions(content);
+    if (questions.length) return [{ kind: 'quiz', questions }];
+  }
+
+  const key = `${ctx.nodeTitle}::${ctx.sectionTitle}`;
+  if (key === 'The Reminder Puzzle::The Reminder Puzzle') {
+    return pushSectionImage([
+      { kind: 'p', text: "You get a text from your clinic: ___'Don't forget your appointment tomorrow!'___ Later, the clinic notices that patients who received a text were much more likely to show up." },
+      { kind: 'p', text: "Should the clinic celebrate? Did the text reminder ___cause___ better attendance? This lesson starts with that puzzle." },
+    ], ctx);
+  }
+
+  if (key === 'The Reminder Puzzle::Before We Dive In') {
+    return [
+      { kind: 'p', text: "Most of us have a natural instinct: if two things happen together, one probably caused the other. Reminded patients show up more, so reminders must work. It feels obvious." },
+      { kind: 'callout', tone: 'err', icon: 'Question', title: 'Common trap',
+        text: "The patients who received a reminder and the patients who did not may have already been different ___before___ any text was sent." },
+      { kind: 'p', text: "Some patients have a stable routine, a charged phone, and a registered mobile number on file. Others are harder to reach, maybe because they move frequently, work unpredictable hours, or have an old number on record." },
+      { kind: 'callout', tone: 'sun', icon: 'Lightbulb', title: 'What the gap may hide',
+        text: "The attendance gap might be real, but the reminder might deserve less credit than it first appears." },
+    ];
+  }
+
+  if (key === 'The Reminder Puzzle::Meet the Hidden Driver') {
+    return pushSectionImage([
+      { kind: 'p', text: 'Our story has three characters.' },
+      { kind: 'cards', items: HEALTHCARE_VARIABLE_CARDS },
+      { kind: 'callout', tone: 'accent', icon: 'Lightbulb', title: 'Key idea',
+        text: "Patient Engagement quietly influences both Received Reminder and Attended Appointment at the same time." },
+      { kind: 'roads', roads: HEALTHCARE_ROADS },
+      { kind: 'p', text: "That hidden driver is called a ___confounder___. It can make the reminder look more powerful than it really is, because the reminded group may already contain more patients who were likely to attend." },
+    ], ctx);
+  }
+
+  if (key === 'The Reminder Puzzle::Seeing the Structure') {
+    return pushSectionImage([
+      { kind: 'p', text: "The diagram below maps the three characters and their connections. Patient Engagement sits upstream of both the reminder and attendance." },
+      { kind: 'graph', graph: ctx.graph },
+      { kind: 'p', text: "The clinic's record system lives in the ___observational world___. All roads are open, so the attendance gap carries both the possible reminder effect and the fingerprints of engagement." },
+      { kind: 'callout', tone: 'accent', icon: 'Sparkle', title: 'So what would actually settle it?',
+        text: "We would need to change the reminder rule ourselves: send texts to a randomly chosen mix of patients, regardless of engagement level." },
+    ], ctx);
+  }
+
+  if (key === 'Changing the Rule::Changing the Rule') {
+    return pushSectionImage([
+      { kind: 'p', text: "In the last stop we saw the puzzle: patients who got a text reminder attended more often, but highly engaged patients were already more likely to both receive a reminder ___and___ show up." },
+      { kind: 'p', text: "This stop asks a simple question: what if the clinic took over the decision of who gets a reminder, ignoring engagement entirely?" },
+    ], ctx);
+  }
+
+  if (key === 'Changing the Rule::Before We Dive In') {
+    return [
+      { kind: 'callout', tone: 'err', icon: 'X', title: 'Common mistake',
+        text: "___'If I look only at patients who received a reminder, I can see what the reminder does.'___" },
+      { kind: 'p', text: "The group who received reminders was not chosen at random. In many clinics, reminders reach patients who already have a valid mobile number on file, stable schedules, and a habit of engaging with healthcare." },
+      { kind: 'callout', tone: 'accent', icon: 'Check', title: 'What works instead',
+        text: "Filtering to patients who happened to receive a reminder is different from deliberately handing reminders out by design. The second approach takes control away from Patient Engagement." },
+    ];
+  }
+
+  if (key === "Changing the Rule::What 'Changing the Rule' Actually Means") {
+    return [
+      { kind: 'p', text: "Normally, the clinic's reminder system follows an unwritten rule: patients who are more engaged, digitally connected, and life-stable are more likely to end up receiving a reminder." },
+      { kind: 'p', text: "Now imagine the clinic replaces that rule. A coordinator flips a coin for each eligible patient. Heads: you get the reminder. Tails: you do not." },
+      { kind: 'p', text: "Engagement still affects whether someone attends. What changes is that engagement no longer decides who gets the reminder. The coin does." },
+      { kind: 'codebox', label: 'Plain-language rule', code: 'Replace clinic targeting with a coin flip.' },
+      { kind: 'p', text: "The two groups produced by the coin flip are now mixed: high-engagement and low-engagement patients can appear in both the reminder and no-reminder groups." },
+      { kind: 'callout', tone: 'sun', icon: 'Lightbulb', title: 'Only one link changes',
+        text: "Patient Engagement still influences attendance. Received Reminder may still influence attendance. What disappears is the link from Patient Engagement to Received Reminder." },
+    ];
+  }
+
+  if (key === 'Changing the Rule::See the Arrow Disappear') {
+    return pushSectionImage([
+      { kind: 'p', text: "Here is the causal picture after the clinic flips a coin. The road from Patient Engagement into Received Reminder is the one that disappears." },
+      { kind: 'graph', graph: ctx.graph, intervention: true },
+      { kind: 'callout', tone: 'accent', icon: 'Sparkle', title: 'What changes about what we can learn?',
+        text: "With that link severed, the two reminder groups are no longer systematically different in engagement levels. The attendance difference can more cleanly reflect the reminder's own contribution." },
+    ], ctx);
+  }
+
+  return sectionContentToBlocks(content, ctx);
 }
 
 function sectionContentToBlocks(content, ctx) {

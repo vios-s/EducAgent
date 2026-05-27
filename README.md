@@ -11,7 +11,7 @@ EducAgent is a learner-facing demo that makes causality feel approachable. It in
 - Study Mode as the main path into causality basics.
 - A visible audience switch for previewing Everyone, CS student, and Healthcare tracks.
 - Booth Mode for CHAIFest-style stand-up demos: one question, one hidden-path reveal, a causal graph, and a QR for the 3-minute phone challenge.
-- Separate expert trust and 30-second feedback pages for booth visitors.
+- A 30-second feedback page for booth visitors.
 - Project and funding links with QR codes for VIOS Group and CHAI at the bottom of the homepage.
 
 ## Learning Paths
