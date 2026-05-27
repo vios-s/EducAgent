@@ -1,0 +1,52 @@
+[
+  {
+    "text": "prior",
+    "start": 0.09,
+    "end": 0.42
+  },
+  {
+    "text": "achievement,",
+    "start": 0.42,
+    "end": 1.46
+  },
+  {
+    "text": "what",
+    "start": 1.47,
+    "end": 1.66
+  },
+  {
+    "text": "a",
+    "start": 1.66,
+    "end": 1.69
+  },
+  {
+    "text": "student",
+    "start": 1.73,
+    "end": 2.06
+  },
+  {
+    "text": "already",
+    "start": 2.06,
+    "end": 2.41
+  },
+  {
+    "text": "knew",
+    "start": 2.41,
+    "end": 2.64
+  },
+  {
+    "text": "before",
+    "start": 2.64,
+    "end": 3.05
+  },
+  {
+    "text": "tutoring",
+    "start": 3.05,
+    "end": 3.59
+  },
+  {
+    "text": "began.",
+    "start": 3.59,
+    "end": 4
+  }
+]

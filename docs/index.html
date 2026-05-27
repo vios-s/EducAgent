@@ -188,6 +188,40 @@
 
   .home-mobile-art { display: none; }
 
+  .audience-segment {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.78);
+    box-shadow: var(--shadow-sm);
+    max-width: min(100%, 560px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .audience-segment::-webkit-scrollbar { display: none; }
+  .audience-segment-button {
+    min-height: 34px;
+    white-space: nowrap;
+    padding: 7px 11px;
+    border-radius: 8px;
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .audience-segment-button.is-active {
+    background: var(--ink);
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(42,31,20,0.14);
+  }
+  .audience-segment-button:disabled {
+    opacity: 0.58;
+    cursor: default;
+  }
+
   .lesson-hero-bg-art {
     position: absolute;
     z-index: 0;
@@ -214,12 +248,47 @@
     pointer-events: none;
   }
 
+  .lesson-audio-guide {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 24px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.82);
+    box-shadow: var(--shadow-sm);
+  }
+  .lesson-audio-guide-button {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 13px;
+    border-radius: 9px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+  .lesson-audio-guide-meta {
+    padding-right: 4px;
+    color: var(--ink-mute);
+    font-size: 12.5px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
   @media (max-width: 720px) {
     body { font-size: 15px; }
 
     .topbar-inner {
       padding: 10px 14px !important;
       gap: 8px !important;
+      flex-wrap: wrap !important;
     }
     .topbar-brand {
       gap: 9px !important;
@@ -235,13 +304,31 @@
     .topbar-subtitle {
       display: none !important;
     }
-    .learner-switch {
-      flex: 0 0 auto !important;
-      width: 40px !important;
-      height: 40px !important;
-      padding: 0 !important;
-      border-radius: 10px !important;
-      min-height: 40px !important;
+    .audience-segment {
+      flex: 1 1 100% !important;
+      order: 3;
+      width: 100%;
+      max-width: none;
+    }
+    .audience-segment-button {
+      flex: 1 0 auto;
+      min-height: 38px;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+    .lesson-audio-guide {
+      display: flex !important;
+      width: 100%;
+      align-items: stretch !important;
+      justify-content: space-between;
+      gap: 8px !important;
+    }
+    .lesson-audio-guide-button {
+      flex: 1;
+      min-width: 0;
+    }
+    .lesson-audio-guide-meta {
+      display: none;
     }
 
     .home-hero {
@@ -269,15 +356,50 @@
     }
     .home-actions {
       display: grid !important;
-      grid-template-columns: 1fr !important;
-      gap: 10px !important;
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+      gap: 6px !important;
       margin-top: 24px !important;
+      overflow: visible !important;
+      padding-bottom: 2px;
     }
     .home-primary-cta,
     .home-secondary-cta {
       width: 100% !important;
-      min-height: 50px !important;
+      min-width: 0 !important;
+      min-height: 46px !important;
       justify-content: center !important;
+      padding: 8px 4px !important;
+      font-size: 10.5px !important;
+      gap: 4px !important;
+      white-space: normal !important;
+      line-height: 1.08 !important;
+      text-align: center !important;
+    }
+    .home-actions svg {
+      width: 13px !important;
+      height: 13px !important;
+    }
+    .booth-shell-card {
+      min-height: auto !important;
+      height: auto !important;
+      overflow: visible !important;
+      display: grid !important;
+    }
+    #booth {
+      height: auto !important;
+      min-height: calc(100vh - 64px) !important;
+      place-items: start stretch !important;
+    }
+    .booth-header,
+    .booth-grid,
+    .booth-bottom-rail {
+      grid-template-columns: 1fr !important;
+    }
+    .booth-header-tabs {
+      width: 100%;
+    }
+    .booth-challenge-panel {
+      overflow: visible !important;
     }
     .home-mobile-art {
       display: block !important;
@@ -294,6 +416,15 @@
       aspect-ratio: 16 / 10;
       object-fit: cover;
       object-position: center center;
+    }
+    .feedback-grid,
+    .expert-hero-grid,
+    .expert-detail-grid,
+    .home-feedback-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .home-feedback-card {
+      grid-template-columns: auto minmax(0, 1fr) !important;
     }
     .lesson-hero-bg-art {
       inset: 0 !important;

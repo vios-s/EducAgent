@@ -1,0 +1,87 @@
+[
+  {
+    "text": "Before",
+    "start": 0.03,
+    "end": 0.5
+  },
+  {
+    "text": "the",
+    "start": 0.5,
+    "end": 0.76
+  },
+  {
+    "text": "school",
+    "start": 0.76,
+    "end": 1.26
+  },
+  {
+    "text": "decides,",
+    "start": 1.26,
+    "end": 2.04
+  },
+  {
+    "text": "after",
+    "start": 2.15,
+    "end": 2.47
+  },
+  {
+    "text": "the",
+    "start": 2.53,
+    "end": 2.81
+  },
+  {
+    "text": "coin",
+    "start": 2.81,
+    "end": 3.18
+  },
+  {
+    "text": "flip",
+    "start": 3.18,
+    "end": 3.55
+  },
+  {
+    "text": "decides,",
+    "start": 3.55,
+    "end": 4.35
+  },
+  {
+    "text": "only",
+    "start": 4.35,
+    "end": 4.57
+  },
+  {
+    "text": "the",
+    "start": 4.61,
+    "end": 4.75
+  },
+  {
+    "text": "road",
+    "start": 4.75,
+    "end": 5
+  },
+  {
+    "text": "into",
+    "start": 5,
+    "end": 5.18
+  },
+  {
+    "text": "tutoring",
+    "start": 5.25,
+    "end": 5.6
+  },
+  {
+    "text": "assignment",
+    "start": 5.6,
+    "end": 6.24
+  },
+  {
+    "text": "is",
+    "start": 6.27,
+    "end": 6.49
+  },
+  {
+    "text": "cut.",
+    "start": 6.49,
+    "end": 6.92
+  }
+]

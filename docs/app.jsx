@@ -4,7 +4,207 @@ const { useState: useS, useEffect: useE, useMemo: useM, useRef: useR } = React;
 
 // ============ Block renderers ============
 
-function Paragraph({ text }) {
+const AUDIO_QUEUE_GAP_MS = 700;
+
+function makeAudioId(lessonId, blockIndex, part) {
+  return `${lessonId}--b${String(blockIndex).padStart(2, '0')}--${part}`;
+}
+
+function getAudioEntry(manifest, lessonId, blockIndex, part) {
+  return manifest?.segments?.[makeAudioId(lessonId, blockIndex, part)] || null;
+}
+
+function audioTargetProps(entry) {
+  return entry?.id ? { 'data-audio-segment': entry.id, tabIndex: -1 } : {};
+}
+
+function escapeAudioSelector(value) {
+  return String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+function scrollToAudioEntry(entry) {
+  if (!entry?.id) return;
+  window.requestAnimationFrame(() => {
+    const selector = `[data-audio-segment="${escapeAudioSelector(entry.id)}"], [data-audio-id="${escapeAudioSelector(entry.id)}"]`;
+    const target = document.querySelector(selector);
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (typeof target.focus === 'function') target.focus({ preventScroll: true });
+  });
+}
+
+function useAudioPlayer() {
+  const audioRef = useR(null);
+  const queueRef = useR([]);
+  const queueIndexRef = useR(-1);
+  const continuousRef = useR(false);
+  const nextTimerRef = useR(null);
+  const [playingId, setPlayingId] = useS(null);
+  const [continuous, setContinuous] = useS(false);
+
+  const clearNextTimer = () => {
+    if (nextTimerRef.current) {
+      window.clearTimeout(nextTimerRef.current);
+      nextTimerRef.current = null;
+    }
+  };
+
+  const stop = () => {
+    clearNextTimer();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.removeAttribute('src');
+      audioRef.current.load();
+    }
+    continuousRef.current = false;
+    queueRef.current = [];
+    queueIndexRef.current = -1;
+    setPlayingId(null);
+    setContinuous(false);
+  };
+
+  const finish = () => {
+    clearNextTimer();
+    continuousRef.current = false;
+    queueRef.current = [];
+    queueIndexRef.current = -1;
+    setPlayingId(null);
+    setContinuous(false);
+  };
+
+  const playEntry = (entry, options = {}) => {
+    if (!entry?.audioSrc) return;
+    clearNextTimer();
+    const isContinuous = Boolean(options.continuous);
+    if (Array.isArray(options.queue)) queueRef.current = options.queue.filter(item => item?.audioSrc);
+    if (Number.isInteger(options.index)) queueIndexRef.current = options.index;
+    continuousRef.current = isContinuous;
+    setContinuous(isContinuous);
+
+    let audio = audioRef.current;
+    if (!audio) {
+      audio = new Audio();
+      audio.preload = 'auto';
+      audioRef.current = audio;
+    }
+    audio.pause();
+    audio.onended = () => {
+      if (continuousRef.current) {
+        const nextIndex = queueIndexRef.current + 1;
+        const next = queueRef.current[nextIndex];
+        if (next) {
+          setPlayingId(null);
+          nextTimerRef.current = window.setTimeout(() => {
+            nextTimerRef.current = null;
+            if (!continuousRef.current) return;
+            playEntry(next, { continuous: true, index: nextIndex, scroll: true });
+          }, AUDIO_QUEUE_GAP_MS);
+          return;
+        }
+      }
+      finish();
+    };
+    audio.onerror = finish;
+    audio.src = entry.audioSrc;
+    setPlayingId(entry.id);
+    if (options.scroll) scrollToAudioEntry(entry);
+    audio.play().catch(finish);
+  };
+
+  const toggle = (entry) => {
+    if (playingId === entry?.id && audioRef.current) {
+      stop();
+      return;
+    }
+    queueRef.current = [];
+    queueIndexRef.current = -1;
+    continuousRef.current = false;
+    playEntry(entry, { continuous: false });
+  };
+
+  const startQueue = (entries, startId) => {
+    const queue = (entries || []).filter(entry => entry?.audioSrc);
+    if (!queue.length) return;
+    const startIndex = Math.max(0, startId ? queue.findIndex(entry => entry.id === startId) : 0);
+    playEntry(queue[startIndex], { continuous: true, queue, index: startIndex, scroll: true });
+  };
+
+  const toggleQueue = (entries) => {
+    if (continuous && audioRef.current) stop();
+    else startQueue(entries);
+  };
+
+  useE(() => () => stop(), []);
+
+  return { playingId, continuous, toggle, startQueue, toggleQueue, stop };
+}
+
+function AudioButton({ entry, player, queue, label = 'Listen to this paragraph', size = 30, style }) {
+  if (!entry || !player) return null;
+  const active = player.playingId === entry.id;
+  const IconC = active ? Icon.Pause : Icon.Volume;
+  const handleClick = () => {
+    if (active) {
+      player.stop();
+      return;
+    }
+    if (queue?.length) player.startQueue(queue, entry.id);
+    else player.toggle(entry);
+  };
+  return (
+    <button
+      type="button"
+      title={active ? 'Pause audio' : label}
+      aria-label={active ? 'Pause audio' : label}
+      data-audio-id={entry.id}
+      onClick={handleClick}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: 999,
+        border: `1px solid ${active ? 'var(--primary)' : 'var(--line)'}`,
+        background: active ? 'var(--primary)' : 'rgba(255,255,255,0.86)',
+        color: active ? '#fff' : 'var(--primary)',
+        display: 'grid',
+        placeItems: 'center',
+        flexShrink: 0,
+        cursor: 'pointer',
+        boxShadow: active ? '0 8px 18px rgba(232,93,44,0.22)' : 'var(--shadow-sm)',
+        transition: 'transform .14s ease, background .14s ease, color .14s ease',
+        ...style,
+      }}
+    >
+      <IconC size={Math.max(14, size - 14)}/>
+    </button>
+  );
+}
+
+function Paragraph({ text, audioEntry, audioPlayer, audioQueue }) {
+  if (audioEntry) {
+    return (
+      <div {...audioTargetProps(audioEntry)} style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 10,
+        margin: '0 0 18px',
+        maxWidth: 'calc(64ch + 42px)',
+      }}>
+        <p style={{
+          fontSize: 'var(--reading-size, 17px)',
+          lineHeight: 1.72,
+          color: 'var(--ink)',
+          margin: 0,
+          maxWidth: '64ch',
+          flex: 1,
+          minWidth: 0,
+        }}>
+          <FormattedText text={text}/>
+        </p>
+        <AudioButton entry={audioEntry} player={audioPlayer} queue={audioQueue} style={{ marginTop: 3 }}/>
+      </div>
+    );
+  }
+
   return (
     <p style={{
       fontSize: 'var(--reading-size, 17px)',
@@ -18,7 +218,7 @@ function Paragraph({ text }) {
   );
 }
 
-function ObjectivesBlock({ title, items }) {
+function ObjectivesBlock({ title, items, audioItems = [], audioPlayer, audioQueue }) {
   return (
     <div style={{
       background: 'var(--surface)',
@@ -47,13 +247,14 @@ function ObjectivesBlock({ title, items }) {
       </div>
       <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {items.map((item, i) => (
-          <li key={i} style={{ display: 'flex', gap: 10, fontSize: 15.5, lineHeight: 1.55, color: 'var(--ink-soft)' }}>
+          <li key={i} {...audioTargetProps(audioItems[i])} style={{ display: 'flex', gap: 10, fontSize: 15.5, lineHeight: 1.55, color: 'var(--ink-soft)', alignItems: 'flex-start' }}>
             <span style={{
               flexShrink: 0, marginTop: 7,
               width: 6, height: 6, borderRadius: 999,
               background: 'var(--primary)',
             }}/>
-            <span><FormattedText text={item}/></span>
+            <span style={{ flex: 1, minWidth: 0 }}><FormattedText text={item}/></span>
+            <AudioButton entry={audioItems[i]} player={audioPlayer} queue={audioQueue} label="Listen to this learning goal" size={28}/>
           </li>
         ))}
       </ul>
@@ -78,9 +279,9 @@ function SectionHeading({ id, eyebrow, title }) {
   );
 }
 
-function Figure({ src, caption, alt }) {
+function Figure({ src, caption, alt, audioEntry, audioPlayer, audioQueue }) {
   return (
-    <figure style={{
+    <figure {...audioTargetProps(audioEntry)} style={{
       margin: '28px 0',
       borderRadius: 'var(--radius-lg)',
       overflow: 'hidden',
@@ -100,14 +301,15 @@ function Figure({ src, caption, alt }) {
           display: 'flex', alignItems: 'flex-start', gap: 8,
         }}>
           <Icon.Sparkle size={14} style={{ color: 'var(--primary)', marginTop: 3, flexShrink: 0 }}/>
-          <span>{caption}</span>
+          <span style={{ flex: 1, minWidth: 0 }}>{caption}</span>
+          <AudioButton entry={audioEntry} player={audioPlayer} queue={audioQueue} label="Listen to this image caption" size={28}/>
         </figcaption>
       )}
     </figure>
   );
 }
 
-function CalloutBlock({ tone, icon, title, text }) {
+function CalloutBlock({ tone, icon, title, text, audioEntry, audioPlayer, audioQueue }) {
   const toneMap = {
     sun:     { bg: 'var(--sun-soft)',    bar: 'var(--sun)',     ic: 'var(--primary)' },
     accent:  { bg: 'var(--accent-soft)', bar: 'var(--accent)',  ic: 'var(--accent)' },
@@ -117,7 +319,7 @@ function CalloutBlock({ tone, icon, title, text }) {
   const t = toneMap[tone] || toneMap.sun;
   const IconC = Icon[icon] || Icon.Lightbulb;
   return (
-    <div style={{
+    <div {...audioTargetProps(audioEntry)} style={{
       background: t.bg, borderRadius: 'var(--radius)',
       padding: '18px 20px', margin: '8px 0 22px',
       display: 'flex', gap: 14, alignItems: 'flex-start',
@@ -135,15 +337,18 @@ function CalloutBlock({ tone, icon, title, text }) {
       </div>
       <div>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{title}</div>
-        <div style={{ fontSize: 15.5, color: 'var(--ink-soft)', lineHeight: 1.6 }}>
-          <FormattedText text={text}/>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div style={{ fontSize: 15.5, color: 'var(--ink-soft)', lineHeight: 1.6, flex: 1, minWidth: 0 }}>
+            <FormattedText text={text}/>
+          </div>
+          <AudioButton entry={audioEntry} player={audioPlayer} queue={audioQueue} label="Listen to this note" size={28}/>
         </div>
       </div>
     </div>
   );
 }
 
-function VariableCards({ items }) {
+function VariableCards({ items, audioEntries = [], audioPlayer, audioQueue }) {
   const colorMap = {
     sun:     { bg: 'var(--sun-soft)',     ink: 'var(--primary)', dot: 'var(--sun)' },
     primary: { bg: 'var(--primary-soft)', ink: 'var(--primary)', dot: 'var(--primary)' },
@@ -157,7 +362,7 @@ function VariableCards({ items }) {
       {items.map((it, i) => {
         const c = colorMap[it.color] || colorMap.primary;
         return (
-          <div key={i} style={{
+          <div key={i} {...audioTargetProps(audioEntries[i])} style={{
             background: 'var(--surface)',
             border: '1px solid var(--line)',
             borderRadius: 18,
@@ -165,6 +370,14 @@ function VariableCards({ items }) {
             position: 'relative', overflow: 'hidden',
             boxShadow: 'var(--shadow-sm)',
           }}>
+            <AudioButton
+              entry={audioEntries[i]}
+              player={audioPlayer}
+              queue={audioQueue}
+              label={`Listen to ${it.label}`}
+              size={28}
+              style={{ position: 'absolute', top: 14, right: 14, zIndex: 1 }}
+            />
             <div style={{
               width: 44, height: 44, borderRadius: 12,
               background: c.bg, color: c.ink,
@@ -187,14 +400,14 @@ function VariableCards({ items }) {
   );
 }
 
-function RoadsBlock({ roads }) {
+function RoadsBlock({ roads, audioEntries = [], audioPlayer, audioQueue }) {
   return (
     <div style={{ display: 'grid', gap: 12, margin: '8px 0 22px', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
       {roads.map((r, i) => {
         const tone = r.tone === 'sun' ? { bg: 'var(--sun-soft)', stripe: 'var(--sun)', ic: 'var(--primary)' }
                                        : { bg: 'var(--primary-soft)', stripe: 'var(--primary)', ic: 'var(--primary)' };
         return (
-          <div key={i} style={{
+          <div key={i} {...audioTargetProps(audioEntries[i]?.main)} style={{
             position: 'relative',
             background: 'var(--surface)',
             border: '1px solid var(--line)',
@@ -203,6 +416,14 @@ function RoadsBlock({ roads }) {
             overflow: 'hidden',
             boxShadow: 'var(--shadow-sm)',
           }}>
+            <AudioButton
+              entry={audioEntries[i]?.main}
+              player={audioPlayer}
+              queue={audioQueue}
+              label={`Listen to ${r.label}`}
+              size={28}
+              style={{ position: 'absolute', top: 16, right: 16, zIndex: 1 }}
+            />
             <div style={{
               position: 'absolute', left: 0, top: 0, bottom: 0, width: 8,
               background: tone.stripe,
@@ -216,9 +437,12 @@ function RoadsBlock({ roads }) {
               {r.hopeful ? <Icon.Trophy size={18}/> : <Icon.Question size={18}/>}
             </div>
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{i+1}. {r.label}</div>
-            <div style={{ fontSize: 14.5, color: 'var(--ink-soft)', lineHeight: 1.55 }}>{r.desc}</div>
-            <div style={{ marginTop: 12, fontSize: 12, color: 'var(--ink-mute)', fontStyle: 'italic' }}>
-              {r.note || (r.hopeful ? '✨ This is what we hope is true.' : '⚠ This is the hidden alternative.')}
+            <div style={{ fontSize: 14.5, color: 'var(--ink-soft)', lineHeight: 1.55, paddingRight: audioEntries[i]?.main ? 32 : 0 }}>{r.desc}</div>
+            <div {...audioTargetProps(audioEntries[i]?.note)} style={{ marginTop: 12, fontSize: 12, color: 'var(--ink-mute)', fontStyle: 'italic', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                {r.note || (r.hopeful ? '✨ This is what we hope is true.' : '⚠ This is the hidden alternative.')}
+              </span>
+              <AudioButton entry={audioEntries[i]?.note} player={audioPlayer} queue={audioQueue} label="Listen to this note" size={26}/>
             </div>
           </div>
         );
@@ -277,9 +501,27 @@ function renderMarkdownPart(part, key) {
     );
   }
   if (part.type === 'quote') {
-    return <CalloutBlock key={key} tone="accent" icon="Lightbulb" title="Note" text={cleanInline(part.text)}/>;
+    return <CalloutBlock key={key} tone="accent" icon="Lightbulb" title="Key note" text={cleanInline(part.text)}/>;
+  }
+  if (part.type === 'p') {
+    const highlight = parseHighlightParagraph(part.text);
+    if (highlight) {
+      return (
+        <CalloutBlock
+          key={key}
+          tone={highlight.tone}
+          icon={highlight.icon}
+          title={highlight.title}
+          text={cleanInline(highlight.text)}
+        />
+      );
+    }
   }
   if (part.type === 'ul' || part.type === 'ol' || part.type === 'alpha') {
+    const concepts = parseConceptItems(part.items);
+    if (concepts.length >= 2 && concepts.length === part.items.length) {
+      return <MarkdownConceptCards key={key} items={concepts}/>;
+    }
     const ordered = part.type === 'ol';
     const Tag = ordered ? 'ol' : 'ul';
     return (
@@ -368,6 +610,109 @@ function renderMarkdownPart(part, key) {
     );
   }
   return <Paragraph key={key} text={cleanInline(part.text)}/>;
+}
+
+function parseHighlightParagraph(text) {
+  const value = String(text || '').trim();
+  const keyIdea = value.match(/^Here is the key idea:\s*(.+)$/i);
+  if (keyIdea) {
+    return {
+      tone: 'accent',
+      icon: 'Lightbulb',
+      title: 'Key idea',
+      text: keyIdea[1],
+    };
+  }
+
+  const boldOnly = value.match(/^\*\*(.+?)\*\*$/);
+  if (boldOnly) {
+    return {
+      tone: /only|safest|what would|what changes/i.test(boldOnly[1]) ? 'primary' : 'sun',
+      icon: /only|trap|misconception/i.test(boldOnly[1]) ? 'Question' : 'Lightbulb',
+      title: /only|trap|misconception/i.test(boldOnly[1]) ? 'Common trap' : 'Pause point',
+      text: boldOnly[1],
+    };
+  }
+
+  return null;
+}
+
+function parseConceptItems(items) {
+  return items.map((item) => {
+    const match = String(item || '').trim().match(/^\*\*(.+?):\*\*\s*(.+)$/);
+    if (!match) return null;
+    return {
+      label: match[1],
+      text: match[2],
+    };
+  }).filter(Boolean);
+}
+
+function MarkdownConceptCards({ items }) {
+  const colors = [
+    { bg: 'var(--plum-soft)', ink: 'var(--plum)' },
+    { bg: 'var(--primary-soft)', ink: 'var(--primary)' },
+    { bg: 'var(--accent-soft)', ink: 'var(--accent)' },
+  ];
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
+      gap: 12,
+      margin: '10px 0 24px',
+      maxWidth: '72ch',
+    }}>
+      {items.map((item, index) => {
+        const c = colors[index % colors.length];
+        return (
+          <div key={item.label} style={{
+            border: '1px solid var(--line)',
+            borderRadius: 8,
+            background: 'var(--surface)',
+            boxShadow: 'var(--shadow-sm)',
+            padding: 16,
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              width: 34,
+              height: 34,
+              borderRadius: 8,
+              display: 'grid',
+              placeItems: 'center',
+              background: c.bg,
+              color: c.ink,
+              marginBottom: 10,
+            }}>
+              <Icon.Graph size={17}/>
+            </div>
+            <div style={{
+              fontFamily: 'var(--font-display)',
+              fontWeight: 800,
+              fontSize: 15.5,
+              lineHeight: 1.2,
+              marginBottom: 6,
+            }}>
+              <FormattedText text={cleanInline(item.label)}/>
+            </div>
+            <div style={{ color: 'var(--ink-soft)', fontSize: 13.5, lineHeight: 1.55 }}>
+              <FormattedText text={cleanInline(item.text)}/>
+            </div>
+            <div style={{
+              position: 'absolute',
+              right: -20,
+              bottom: -22,
+              width: 70,
+              height: 70,
+              borderRadius: '50%',
+              background: c.bg,
+              opacity: 0.48,
+            }}/>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function parseMarkdownBlocks(text) {
@@ -477,13 +822,21 @@ function cleanInline(text) {
 }
 
 // Causal graph visualization (replaces mermaid)
-function CausalGraph({ intervention = false }) {
-  // SVG: Z --> T, Z --> Y, T --> Y; on intervention, Z->T is cut.
-  const nodes = {
+function CausalGraph({ intervention = false, graph = null }) {
+  // SVG topology: Z --> T, Z --> Y, T --> Y. Scenario labels can change.
+  const baseNodes = {
     Z: { x: 80,  y: 90,  label: 'Prior\nAchievement', tag: 'Z', color: 'var(--sun)', bg: 'var(--sun-soft)' },
     T: { x: 280, y: 50,  label: 'Tutoring',           tag: 'T', color: 'var(--primary)', bg: 'var(--primary-soft)' },
     Y: { x: 280, y: 170, label: 'Test Score',         tag: 'Y', color: 'var(--accent)', bg: 'var(--accent-soft)' },
   };
+  const nodes = Object.fromEntries(
+    Object.entries(baseNodes).map(([key, node]) => [key, { ...node, ...(graph?.nodes?.[key] || {}) }])
+  );
+  const legendItems = graph?.legend || [
+    { color: 'var(--sun)', label: 'Hidden influence' },
+    { color: 'var(--primary)', label: 'What we want to measure' },
+    { color: 'var(--accent)', label: 'Outcome' },
+  ];
   return (
     <div style={{
       background: 'var(--surface)',
@@ -499,8 +852,8 @@ function CausalGraph({ intervention = false }) {
           background: 'var(--plum-soft)', color: 'var(--plum)',
           display: 'grid', placeItems: 'center',
         }}><Icon.Graph size={16}/></div>
-        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15 }}>The causal map</div>
-        <div style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-mute)' }}>Arrows show influence</div>
+        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15 }}>{graph?.title || 'The causal map'}</div>
+        <div style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-mute)' }}>{graph?.hint || 'Arrows show influence'}</div>
       </div>
 
       <svg viewBox="0 0 380 220" style={{ width: '100%', height: 'auto', maxHeight: 280 }}>
@@ -547,9 +900,9 @@ function CausalGraph({ intervention = false }) {
       </svg>
 
       <div style={{ display: 'flex', gap: 14, justifyContent: 'center', marginTop: 14, flexWrap: 'wrap', fontSize: 13, color: 'var(--ink-soft)' }}>
-        <Legend color="var(--sun)" label="Hidden influence"/>
-        <Legend color="var(--primary)" label="What we want to measure"/>
-        <Legend color="var(--accent)" label="Outcome"/>
+        {legendItems.map((item) => (
+          <Legend key={item.label} color={item.color} label={item.label}/>
+        ))}
       </div>
     </div>
   );
@@ -564,11 +917,16 @@ function Legend({ color, label }) {
 }
 
 // Graph block — toggles between observational and interventional.
-function GraphBlock({ initialIntervention = false }) {
+function GraphBlock({ initialIntervention = false, graph = null }) {
   const [interv, setInterv] = useS(Boolean(initialIntervention));
+  if (graph?.disableIntervention) {
+    return <CausalGraph graph={graph}/>;
+  }
+  const interventionPrompt = graph?.interventionPrompt || 'Show coin-flip tutoring assignment';
+  const interventionClosedLabel = graph?.interventionClosedLabel || 'Coin-flip assignment shown - hidden road closed';
   return (
     <div>
-      <CausalGraph intervention={interv}/>
+      <CausalGraph intervention={interv} graph={graph}/>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center',
         margin: '-8px 0 22px',
@@ -583,7 +941,7 @@ function GraphBlock({ initialIntervention = false }) {
           transition: 'all .15s',
         }}>
           <Icon.Sparkle size={14}/>
-          {interv ? "Showing: do(Tutoring) — hidden road closed" : "Tap to see: do(Tutoring)"}
+          {interv ? interventionClosedLabel : interventionPrompt}
         </button>
       </div>
     </div>
@@ -673,22 +1031,103 @@ function HiringDagGraph({ variant = 'base' }) {
 
 // ============ Lesson view ============
 
-function LessonView({ lesson, course, lessonIndex, totalLessons, onPrev, onNext, hasPrev, hasNext }) {
+function getLessonAudioEntries(lesson, manifest) {
+  const entries = [];
+  const add = (blockIndex, part) => {
+    const entry = getAudioEntry(manifest, lesson.id, blockIndex, part);
+    if (entry?.audioSrc) entries.push(entry);
+  };
+
+  lesson.blocks.forEach((block, blockIndex) => {
+    if (block.kind === 'objectives') {
+      block.items.forEach((_, itemIndex) => add(blockIndex, `objective-${itemIndex}`));
+    } else if (block.kind === 'p') {
+      add(blockIndex, 'p');
+    } else if (block.kind === 'figure' && block.caption) {
+      add(blockIndex, 'caption');
+    } else if (block.kind === 'callout') {
+      add(blockIndex, 'callout');
+    } else if (block.kind === 'cards') {
+      block.items.forEach((_, itemIndex) => add(blockIndex, `card-${itemIndex}`));
+    } else if (block.kind === 'roads') {
+      block.roads.forEach((road, roadIndex) => {
+        add(blockIndex, `road-${roadIndex}`);
+        if (road.note) add(blockIndex, `road-${roadIndex}-note`);
+      });
+    }
+  });
+
+  return entries;
+}
+
+function LessonAudioGuide({ entries, player }) {
+  if (!entries.length || !player) return null;
+  const active = player.continuous;
+  const IconC = active ? Icon.Pause : Icon.Volume;
+  return (
+    <div className="lesson-audio-guide">
+      <button
+        type="button"
+        className="lesson-audio-guide-button"
+        onClick={() => player.toggleQueue(entries)}
+        title="Plays this lesson in order and follows the current paragraph."
+        aria-label={active ? 'Stop lesson audio' : 'Play lesson audio'}
+      >
+        <IconC size={17}/>
+        {active ? 'Stop lesson audio' : 'Play lesson audio'}
+      </button>
+      <span className="lesson-audio-guide-meta">{entries.length} short clips</span>
+    </div>
+  );
+}
+
+function LessonView({ lesson, course, lessonIndex, totalLessons, onPrev, onNext, hasPrev, hasNext, audioManifest, audioPlayer }) {
+  const audioFor = (blockIndex, part) => getAudioEntry(audioManifest, lesson.id, blockIndex, part);
+  const lessonAudioEntries = useM(() => getLessonAudioEntries(lesson, audioManifest), [lesson, audioManifest]);
   return (
     <article style={{ padding: '0 0 80px' }}>
       <LessonHero lesson={lesson} course={course} lessonIndex={lessonIndex} totalLessons={totalLessons}/>
       <div style={{ padding: 'clamp(28px, 4vw, 44px) clamp(20px, 5vw, 56px) 0' }}>
+        <LessonAudioGuide entries={lessonAudioEntries} player={audioPlayer}/>
         {lesson.blocks.map((b, i) => {
           switch (b.kind) {
-            case 'objectives': return <ObjectivesBlock key={i} title={b.title} items={b.items}/>;
+            case 'objectives': return (
+              <ObjectivesBlock
+                key={i}
+                title={b.title}
+                items={b.items}
+                audioItems={b.items.map((_, itemIndex) => audioFor(i, `objective-${itemIndex}`))}
+                audioPlayer={audioPlayer}
+                audioQueue={lessonAudioEntries}
+              />
+            );
             case 'section':    return <SectionHeading key={i} id={b.id} eyebrow={b.eyebrow} title={b.title}/>;
-            case 'p':          return <Paragraph key={i} text={b.text}/>;
-            case 'figure':     return <Figure key={i} src={b.src} caption={b.caption} alt={b.alt}/>;
-            case 'callout':    return <CalloutBlock key={i} {...b}/>;
-            case 'cards':      return <VariableCards key={i} items={b.items}/>;
-            case 'roads':      return <RoadsBlock key={i} roads={b.roads}/>;
+            case 'p':          return <Paragraph key={i} text={b.text} audioEntry={audioFor(i, 'p')} audioPlayer={audioPlayer} audioQueue={lessonAudioEntries}/>;
+            case 'figure':     return <Figure key={i} src={b.src} caption={b.caption} alt={b.alt} audioEntry={audioFor(i, 'caption')} audioPlayer={audioPlayer} audioQueue={lessonAudioEntries}/>;
+            case 'callout':    return <CalloutBlock key={i} {...b} audioEntry={audioFor(i, 'callout')} audioPlayer={audioPlayer} audioQueue={lessonAudioEntries}/>;
+            case 'cards':      return (
+              <VariableCards
+                key={i}
+                items={b.items}
+                audioEntries={b.items.map((_, itemIndex) => audioFor(i, `card-${itemIndex}`))}
+                audioPlayer={audioPlayer}
+                audioQueue={lessonAudioEntries}
+              />
+            );
+            case 'roads':      return (
+              <RoadsBlock
+                key={i}
+                roads={b.roads}
+                audioEntries={b.roads.map((_, roadIndex) => ({
+                  main: audioFor(i, `road-${roadIndex}`),
+                  note: audioFor(i, `road-${roadIndex}-note`),
+                }))}
+                audioPlayer={audioPlayer}
+                audioQueue={lessonAudioEntries}
+              />
+            );
             case 'codebox':    return <CodeBox key={i} label={b.label} code={b.code}/>;
-            case 'graph':      return <GraphBlock key={i} initialIntervention={b.intervention}/>;
+            case 'graph':      return <GraphBlock key={i} initialIntervention={b.intervention} graph={b.graph}/>;
             case 'hiring-graph': return <HiringDagGraph key={i} variant={b.variant}/>;
             case 'markdown':   return <MarkdownBlock key={i} text={b.text}/>;
             case 'quiz':       return <div key={i} style={{ margin: '24px 0' }}><InteractiveQuiz questions={b.questions}/></div>;
@@ -1046,9 +1485,880 @@ function PlaceholderView({ name, onGoStudy }) {
   );
 }
 
+// ============ Booth Mode ============
+
+const AUDIENCE_OPTIONS = [
+  {
+    id: 'learner_0',
+    label: 'Everyone',
+    description: 'Public-friendly tutoring example',
+  },
+  {
+    id: 'learner_1',
+    label: 'CS student',
+    description: 'DAG example for ML and computing audiences',
+  },
+  {
+    id: 'learner_8',
+    label: 'Healthcare',
+    description: 'Healthcare reminder example for CHAI audiences',
+  },
+];
+
+const BOOTH_URL = 'https://vios-s.github.io/EducAgent/#booth';
+const FEEDBACK_URL = 'https://forms.office.com/e/e6KucWWD8X';
+const FEEDBACK_DISPLAY_URL = 'forms.office.com/e/e6KucWWD8X';
+
+const BOOTH_SCENARIOS = {
+  learner_0: {
+    label: 'Everyone',
+    kicker: 'Tutoring puzzle',
+    prompt: 'Tutored students scored higher. What should we wonder first?',
+    options: [
+      'Tutoring definitely caused the whole score gap.',
+      'The tutored students may already have differed before tutoring began.',
+      'The scores are useless because school data is never informative.',
+    ],
+    answer: 1,
+    hiddenTitle: 'Hidden cause: prior achievement',
+    hiddenText: 'Prior achievement can influence both who receives tutoring and the later test score. The raw score gap may mix this hidden path with any tutoring effect.',
+    graph: {
+      title: 'Tutoring causal map',
+      hiddenLabel: 'Prior achievement',
+      nodes: {
+        Z: { label: 'Prior\nAchievement', tag: 'Z', color: 'var(--sun)', bg: 'var(--sun-soft)' },
+        T: { label: 'Tutoring', tag: 'T', color: 'var(--primary)', bg: 'var(--primary-soft)' },
+        Y: { label: 'Test\nScore', tag: 'Y', color: 'var(--accent)', bg: 'var(--accent-soft)' },
+      },
+    },
+  },
+  learner_1: {
+    label: 'CS student',
+    kicker: 'Causal graph teaser',
+    prompt: 'A hiring model recommends applicants with stronger skill signals. What hidden path should a DAG make visible?',
+    options: [
+      'Skill signals alone explain every recommendation.',
+      'University prestige may shape both skill signals and the recommendation.',
+      'Directed arrows only mean two variables are correlated.',
+    ],
+    answer: 1,
+    hiddenTitle: 'Hidden path: background signal into both sides',
+    hiddenText: 'A DAG forces us to say whether UniversityPrestige sits upstream of both TechnicalSkill and HiringRecommendation. That matters before we claim what the model causally depends on.',
+    graph: {
+      title: 'Hiring DAG teaser',
+      hiddenLabel: 'University prestige',
+      nodes: {
+        Z: { label: 'University\nPrestige', tag: 'Z', color: 'var(--plum)', bg: 'var(--plum-soft)' },
+        T: { label: 'Technical\nSkill', tag: 'X', color: 'var(--primary)', bg: 'var(--primary-soft)' },
+        Y: { label: 'Hiring\nRecommendation', tag: 'Y', color: 'var(--accent)', bg: 'var(--accent-soft)' },
+      },
+    },
+  },
+  learner_8: {
+    label: 'Healthcare',
+    kicker: 'CHAI bridge',
+    prompt: 'Text reminders linked to higher attendance. What else might explain it?',
+    options: [
+      'The reminder must have caused the attendance gap.',
+      'Patients getting reminders may already be more engaged or easier to reach.',
+      'Observational healthcare data is never useful.',
+    ],
+    answer: 1,
+    hiddenTitle: 'Hidden cause: patient engagement',
+    hiddenText: 'Engaged, digitally connected, life-stable patients may be more likely to receive reminders and more likely to attend anyway. This is causal reasoning, not medical advice.',
+    graph: {
+      title: 'Clinic reminder map',
+      hiddenLabel: 'Patient engagement',
+      nodes: {
+        Z: { label: 'Patient\nEngagement', tag: 'Z', color: 'var(--plum)', bg: 'var(--plum-soft)' },
+        T: { label: 'Received\nReminder', tag: 'T', color: 'var(--primary)', bg: 'var(--primary-soft)' },
+        Y: { label: 'Attended\nAppointment', tag: 'Y', color: 'var(--accent)', bg: 'var(--accent-soft)' },
+      },
+    },
+  },
+};
+
+function BoothPage({ selectedLearner, onPickLearner, onStart, onGoHome }) {
+  const scenario = BOOTH_SCENARIOS[selectedLearner] || BOOTH_SCENARIOS.learner_0;
+  const [pick, setPick] = useS(null);
+  const [revealed, setRevealed] = useS(false);
+
+  useE(() => {
+    setPick(null);
+    setRevealed(false);
+  }, [selectedLearner]);
+
+  return (
+    <section id="booth" style={{
+      scrollMarginTop: 76,
+      height: 'calc(100vh - 64px)',
+      minHeight: 620,
+      padding: 'clamp(10px, 1.6vw, 20px)',
+      background: 'linear-gradient(180deg, var(--bg-soft) 0%, var(--surface) 100%)',
+      display: 'grid',
+      placeItems: 'center',
+      boxSizing: 'border-box',
+    }}>
+      <div className="booth-shell-card" style={{
+        width: '100%',
+        height: 'calc(100vh - 84px)',
+        minHeight: 0,
+        border: '1px solid var(--line)',
+        borderRadius: 8,
+        background: 'linear-gradient(135deg, var(--surface) 0%, var(--bg-soft) 100%)',
+        boxShadow: 'var(--shadow-lg)',
+        padding: 'clamp(12px, 1.5vw, 18px)',
+        display: 'grid',
+        gridTemplateRows: 'auto minmax(0, 1fr) auto',
+        gap: 12,
+        overflow: 'hidden',
+      }}>
+        <div className="booth-header" style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(300px, 0.42fr)',
+          gap: 14,
+          alignItems: 'end',
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
+              <button onClick={onGoHome} style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                padding: '8px 11px',
+                borderRadius: 10,
+                border: '1px solid var(--line)',
+                background: 'rgba(255,255,255,0.84)',
+                color: 'var(--ink-soft)',
+                fontWeight: 800,
+                fontSize: 13,
+              }}>
+                <Icon.ArrowL size={14}/> Homepage
+              </button>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '8px 12px',
+                borderRadius: 999,
+                background: 'var(--primary-soft)',
+                color: 'var(--primary)',
+                fontWeight: 900,
+                fontSize: 12,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}>
+                <Icon.Target size={14}/> Booth Mode
+              </div>
+              <div style={{ color: 'var(--ink-mute)', fontSize: 13, fontWeight: 700 }}>
+                Stand-up challenge in about 90 seconds
+              </div>
+            </div>
+            <h1 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(30px, 3.2vw, 46px)',
+              lineHeight: 0.98,
+              letterSpacing: '0',
+              margin: 0,
+              maxWidth: 1020,
+            }}>
+              Can you spot the hidden cause?
+            </h1>
+          </div>
+          <div className="booth-header-tabs">
+            <BoothAudienceTabs selectedLearner={selectedLearner} onPickLearner={onPickLearner} compact/>
+          </div>
+        </div>
+
+        <div className="booth-grid" style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(440px, 1.04fr) minmax(420px, 0.96fr)',
+          gap: 12,
+          alignItems: 'stretch',
+          minHeight: 0,
+        }}>
+          <div className="booth-challenge-panel" style={{
+            minHeight: 0,
+            border: '1px solid var(--line)',
+            borderRadius: 8,
+            background: 'rgba(255,255,255,0.88)',
+            boxShadow: 'var(--shadow-sm)',
+            padding: 'clamp(14px, 1.6vw, 18px)',
+            display: 'grid',
+            gridTemplateRows: 'minmax(0, 1fr) auto',
+            gap: 12,
+            overflow: 'hidden',
+          }}>
+            <BoothQuiz scenario={scenario} pick={pick} onPick={setPick} revealed={revealed}/>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button onClick={() => setRevealed(true)} style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                minHeight: 40,
+                padding: '10px 14px',
+                borderRadius: 10,
+                background: 'var(--primary)',
+                color: '#fff',
+                fontWeight: 900,
+                fontSize: 15,
+                boxShadow: '0 12px 24px rgba(232,93,44,0.24)',
+              }}>
+                <Icon.Sparkle size={17}/> Reveal the hidden path
+              </button>
+              {revealed && (
+                <button onClick={() => onStart(selectedLearner)} style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                  minHeight: 40,
+                  padding: '10px 14px',
+                  borderRadius: 10,
+                  background: 'var(--ink)',
+                  color: '#fff',
+                  fontWeight: 900,
+                  fontSize: 15,
+                }}>
+                  <Icon.Play size={16}/> Continue lesson
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div style={{ minHeight: 0 }}>
+            <BoothCausalGraph scenario={scenario} revealed={revealed}/>
+          </div>
+        </div>
+
+        <div className="booth-bottom-rail" style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(310px, 0.42fr)',
+          gap: 12,
+          alignItems: 'stretch',
+          minHeight: 104,
+        }}>
+          <BoothInsightPanel scenario={scenario} pick={pick} revealed={revealed}/>
+          <BoothQrPanel/>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BoothAudienceTabs({ selectedLearner, onPickLearner, compact = false }) {
+  return (
+    <div style={{ marginBottom: compact ? 0 : 12 }}>
+      {!compact && (
+        <div style={{
+          fontSize: 12,
+          color: 'var(--ink-mute)',
+          fontWeight: 900,
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          marginBottom: 8,
+        }}>
+          Pick the path
+        </div>
+      )}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+        gap: 6,
+        padding: 4,
+        borderRadius: 12,
+        border: '1px solid var(--line)',
+        background: 'var(--bg-soft)',
+      }}>
+        {AUDIENCE_OPTIONS.map((option) => {
+          const active = option.id === selectedLearner;
+          return (
+            <button key={option.id} onClick={() => onPickLearner(option.id)} style={{
+              minHeight: 42,
+              borderRadius: 8,
+              padding: '8px 10px',
+              background: active ? 'var(--ink)' : 'transparent',
+              color: active ? '#fff' : 'var(--ink-soft)',
+              fontWeight: 900,
+              fontSize: 13,
+            }}>
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function BoothQuiz({ scenario, pick, onPick, revealed }) {
+  return (
+    <div style={{ minHeight: 0, overflow: 'auto', paddingRight: 2 }}>
+      <div style={{
+        color: 'var(--primary)',
+        fontSize: 12,
+        fontWeight: 900,
+        textTransform: 'uppercase',
+        letterSpacing: '0.08em',
+        marginBottom: 8,
+      }}>
+        {scenario.kicker}
+      </div>
+      <h2 style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: 'clamp(20px, 1.9vw, 26px)',
+        lineHeight: 1.06,
+        margin: '0 0 10px',
+      }}>
+        {scenario.prompt}
+      </h2>
+      {scenario.note && (
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 7,
+          padding: '6px 9px',
+          borderRadius: 8,
+          background: 'var(--plum-soft)',
+          color: 'var(--plum)',
+          fontSize: 12.5,
+          fontWeight: 800,
+          marginBottom: 14,
+        }}>
+          <Icon.Heart size={14}/> {scenario.note}
+        </div>
+      )}
+      <div style={{ display: 'grid', gap: 11 }}>
+        {scenario.options.map((option, index) => {
+          const selected = pick === index;
+          const correct = index === scenario.answer;
+          const showCorrect = revealed && correct;
+          const showWrong = revealed && selected && !correct;
+          return (
+            <button key={option} onClick={() => onPick(index)} style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 14,
+              minHeight: 58,
+              padding: '12px 14px',
+              borderRadius: 8,
+              border: `1.5px solid ${showCorrect ? 'var(--accent)' : showWrong ? 'var(--err)' : selected ? 'var(--primary)' : 'var(--line)'}`,
+              background: showCorrect ? 'var(--accent-soft)' : showWrong ? 'var(--err-soft)' : selected ? 'var(--primary-soft)' : 'var(--surface)',
+              textAlign: 'left',
+              fontSize: 'clamp(16px, 1.35vw, 18px)',
+              lineHeight: 1.34,
+              color: 'var(--ink)',
+              fontWeight: selected || showCorrect ? 700 : 500,
+            }}>
+              <span style={{
+                width: 34,
+                height: 34,
+                borderRadius: 8,
+                display: 'grid',
+                placeItems: 'center',
+                flexShrink: 0,
+                background: showCorrect ? 'var(--accent)' : showWrong ? 'var(--err)' : selected ? 'var(--primary)' : 'var(--bg-soft)',
+                color: showCorrect || showWrong || selected ? '#fff' : 'var(--ink-soft)',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 900,
+                fontSize: 15,
+              }}>
+                {showCorrect ? <Icon.Check size={18} strokeWidth={3}/> : showWrong ? <Icon.X size={18} strokeWidth={3}/> : String.fromCharCode(65 + index)}
+              </span>
+              <span style={{ flex: 1, paddingTop: 4 }}>{option}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function BoothCausalGraph({ scenario, revealed }) {
+  const graph = scenario.graph;
+  const z = graph.nodes.Z;
+  const t = graph.nodes.T;
+  const y = graph.nodes.Y;
+  const hiddenOpacity = revealed ? 1 : 0.28;
+  const hiddenStroke = revealed ? z.color : 'var(--ink-mute)';
+
+  const renderNode = (node, x, yPos, hidden) => (
+    <g transform={`translate(${x}, ${yPos})`} opacity={hidden ? hiddenOpacity : 1}>
+      <circle r="44" fill={hidden && !revealed ? 'var(--bg-soft)' : node.bg} stroke={hidden ? hiddenStroke : node.color} strokeWidth="2.7"/>
+      <text textAnchor="middle" y="-9" fontFamily="var(--font-display)" fontWeight="900" fontSize="24" fill={hidden ? hiddenStroke : node.color}>
+        {hidden && !revealed ? '?' : node.tag}
+      </text>
+      <text textAnchor="middle" y="14" fontFamily="var(--font-body)" fontSize="10" fill="var(--ink)" fontWeight="700">
+        {(hidden && !revealed ? 'Hidden\nCause?' : node.label).split('\n').map((line, i) => (
+          <tspan key={i} x="0" dy={i === 0 ? 0 : 12}>{line}</tspan>
+        ))}
+      </text>
+    </g>
+  );
+
+  return (
+    <div style={{
+      border: '1px solid var(--line)',
+      borderRadius: 8,
+      background: 'linear-gradient(135deg, rgba(255,255,255,0.96) 0%, var(--accent-soft) 100%)',
+      boxShadow: 'var(--shadow)',
+      padding: 'clamp(16px, 2vw, 24px)',
+      minHeight: 0,
+      height: '100%',
+      boxSizing: 'border-box',
+      display: 'grid',
+      gridTemplateRows: 'auto minmax(0, 1fr) auto',
+      overflow: 'hidden',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4 }}>
+        <div style={{
+          width: 34,
+          height: 34,
+          borderRadius: 8,
+          display: 'grid',
+          placeItems: 'center',
+          background: 'var(--accent-soft)',
+          color: 'var(--accent)',
+        }}>
+          <Icon.Graph size={18}/>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 18, lineHeight: 1.1 }}>{graph.title}</div>
+          <div style={{ color: 'var(--ink-mute)', fontSize: 12.5, fontWeight: 700 }}>
+            {revealed ? `Hidden path: ${graph.hiddenLabel}` : 'Observed pattern first'}
+          </div>
+        </div>
+      </div>
+      <svg viewBox="0 0 430 260" preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: '100%', minHeight: 0, display: 'block' }}>
+        <defs>
+          <marker id="booth-arr-main" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--primary)"/>
+          </marker>
+          <marker id="booth-arr-hidden" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill={hiddenStroke}/>
+          </marker>
+        </defs>
+        <line x1="210" y1="90" x2="305" y2="132" stroke="var(--primary)" strokeWidth="4" markerEnd="url(#booth-arr-main)"/>
+        <line x1="126" y1="122" x2="174" y2="88" stroke={hiddenStroke} strokeWidth="4" strokeDasharray={revealed ? 'none' : '7 7'} opacity={hiddenOpacity} markerEnd="url(#booth-arr-hidden)"/>
+        <line x1="126" y1="140" x2="306" y2="154" stroke={hiddenStroke} strokeWidth="4" strokeDasharray={revealed ? 'none' : '7 7'} opacity={hiddenOpacity} markerEnd="url(#booth-arr-hidden)"/>
+        {renderNode(z, 82, 136, true)}
+        {renderNode(t, 206, 72, false)}
+        {renderNode(y, 348, 150, false)}
+      </svg>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', color: 'var(--ink-soft)', fontSize: 12.5, fontWeight: 700, paddingTop: 4 }}>
+        <Legend color={hiddenStroke} label={revealed ? 'Hidden path revealed' : 'Hidden path covered'}/>
+        <Legend color="var(--primary)" label="Observed link"/>
+      </div>
+    </div>
+  );
+}
+
+function BoothInsightPanel({ scenario, pick, revealed }) {
+  const correct = pick === scenario.answer;
+  const waiting = !revealed;
+  return (
+    <div aria-live="polite" style={{
+      border: '1px solid var(--line)',
+      borderRadius: 8,
+      background: waiting ? 'var(--surface)' : correct ? 'var(--accent-soft)' : 'var(--sun-soft)',
+      boxShadow: 'var(--shadow-sm)',
+      padding: 'clamp(14px, 1.6vw, 18px)',
+      display: 'grid',
+      gridTemplateColumns: 'auto minmax(0, 1fr)',
+      gap: 14,
+      alignItems: 'center',
+      borderLeft: `6px solid ${waiting ? 'var(--primary)' : correct ? 'var(--accent)' : 'var(--sun)'}`,
+    }}>
+      <div style={{
+        width: 48,
+        height: 48,
+        borderRadius: 12,
+        display: 'grid',
+        placeItems: 'center',
+        background: '#fff',
+        color: waiting ? 'var(--primary)' : correct ? 'var(--accent)' : 'var(--primary)',
+        boxShadow: 'var(--shadow-sm)',
+      }}>
+        {waiting ? <Icon.Question size={22}/> : correct ? <Icon.Check size={23} strokeWidth={3}/> : <Icon.Lightbulb size={23}/>}
+      </div>
+      <div>
+        <div style={{
+          fontFamily: 'var(--font-display)',
+          fontWeight: 900,
+          fontSize: 'clamp(18px, 2vw, 23px)',
+          lineHeight: 1.05,
+          marginBottom: 5,
+        }}>
+          {waiting ? 'Pick an answer, then reveal the hidden path.' : scenario.hiddenTitle}
+        </div>
+        <div style={{ color: 'var(--ink-soft)', fontSize: 'clamp(13.5px, 1.25vw, 15.5px)', lineHeight: 1.45, maxWidth: 920 }}>
+          {waiting
+            ? 'The graph starts with the visible pattern. Reveal adds the upstream cause that can explain why the groups differed before the intervention.'
+            : scenario.hiddenText}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BoothQrPanel() {
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'auto minmax(0, 1fr)',
+      gap: 12,
+      alignItems: 'center',
+      border: '1px solid var(--line)',
+      borderRadius: 8,
+      background: 'var(--ink)',
+      color: '#fff',
+      padding: 10,
+      boxShadow: 'var(--shadow)',
+      minHeight: 110,
+    }}>
+      <div style={{
+        width: 86,
+        height: 86,
+        padding: 8,
+        borderRadius: 8,
+        background: '#fff',
+      }}>
+        <img src="assets/qr-booth.png" alt="QR code for the EducAgent booth challenge" style={{ width: '100%', height: '100%', display: 'block', objectFit: 'contain' }}/>
+      </div>
+      <div>
+        <div style={{ color: 'var(--sun)', fontSize: 11.5, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+          Take it with you
+        </div>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(14.5px, 1.28vw, 18px)', lineHeight: 1.08, fontWeight: 900, marginBottom: 5 }}>
+          Scan this and try the 3-minute challenge on your phone.
+        </div>
+        <a href={BOOTH_URL} style={{ color: '#fff', fontSize: 13, fontWeight: 800, textDecoration: 'underline', textUnderlineOffset: 3 }}>
+          EducAgent/#booth
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function ExpertTrustSection() {
+  const live = [
+    'Homepage, Study Mode, and 90-second Booth Mode',
+    'Everyone, CS student, and Healthcare audience paths',
+    'Tutoring and clinic-reminder examples with hidden-cause reveal',
+    'Separate Expert Trust and Feedback pages for booth follow-up',
+  ];
+  const prototype = [
+    'Adaptive tutor behavior and personalized misconception tracking',
+    'Agile Mode for bringing a real causal question',
+    'Multi-agent feedback loop and longitudinal learning record',
+    'Formal learning evaluation study design',
+  ];
+  const concepts = [
+    ['Observation vs action', 'Seeing a pattern compared with changing the assignment rule.'],
+    ['Hidden upstream causes', 'A prior factor can shape both who gets the treatment and the outcome.'],
+    ['Directed causal paths', 'Arrows clarify which routes are open in the story.'],
+    ['Rule replacement', 'Coin-flip assignment removes one incoming road into treatment.'],
+  ];
+  const evaluation = [
+    'Pre/post misconception checks',
+    'Time-to-correct-explanation',
+    'Graph interpretation accuracy',
+    'Think-aloud interviews at the booth',
+    'Follow-up intent and contact quality',
+  ];
+  const questions = [
+    'Which healthcare examples feel safe and familiar without becoming clinical advice?',
+    'Where should rigor be visible for researchers but invisible for public visitors?',
+    'What learning gain would make this worth evaluating formally?',
+    'Which feedback fields should become required before CHAIFest?',
+  ];
+
+  return (
+    <section id="expert" style={{
+      scrollMarginTop: 76,
+      padding: '42px clamp(20px, 5vw, 64px) 64px',
+      background: 'linear-gradient(180deg, var(--bg-soft), var(--surface))',
+      borderBottom: '1px solid var(--line-soft)',
+    }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1.08fr) minmax(280px, 0.92fr)',
+        gap: 18,
+        alignItems: 'stretch',
+      }} className="expert-hero-grid">
+        <div style={{
+          borderRadius: 8,
+          background: 'var(--ink)',
+          color: '#fff',
+          padding: 'clamp(24px, 4vw, 38px)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          <div style={{ color: 'var(--sun)', fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+            Expert trust page
+          </div>
+          <h2 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(34px, 5.2vw, 58px)',
+            lineHeight: 0.96,
+            letterSpacing: '0',
+            margin: 0,
+            maxWidth: 760,
+          }}>
+            What can a CHAI researcher trust in 60 seconds?
+          </h2>
+          <p style={{ margin: '16px 0 0', color: 'rgba(255,255,255,0.76)', fontSize: 17, lineHeight: 1.58, maxWidth: 720 }}>
+            This page separates live behavior from prototype intent, names the causal ideas being taught, and turns hallway feedback into evaluation questions.
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 22 }}>
+            {['Live demo', 'Non-diagnostic healthcare bridge', 'Public-first language'].map((item) => (
+              <span key={item} style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '8px 10px',
+                borderRadius: 999,
+                background: 'rgba(255,255,255,0.1)',
+                color: '#fff',
+                border: '1px solid rgba(255,255,255,0.16)',
+                fontSize: 12.5,
+                fontWeight: 800,
+              }}>
+                <Icon.Check size={13}/> {item}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div style={{
+          border: '1px solid var(--line)',
+          borderRadius: 8,
+          background: 'var(--surface)',
+          padding: 20,
+          boxShadow: 'var(--shadow-sm)',
+          display: 'grid',
+          gap: 12,
+        }}>
+          <ExpertList title="What is live now" items={live}/>
+          <ExpertList title="What is still prototype" items={prototype}/>
+        </div>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1.1fr) minmax(280px, 0.9fr)',
+        gap: 18,
+        marginTop: 18,
+      }} className="expert-detail-grid">
+        <div style={{
+          border: '1px solid var(--line)',
+          borderRadius: 8,
+          background: 'var(--surface)',
+          padding: 20,
+          boxShadow: 'var(--shadow-sm)',
+        }}>
+          <div style={{ color: 'var(--primary)', fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+            Causal concepts covered
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 10 }}>
+            {concepts.map(([title, text]) => (
+              <div key={title} style={{ border: '1px solid var(--line-soft)', borderRadius: 8, padding: 14, background: 'var(--bg-soft)' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, lineHeight: 1.1 }}>{title}</div>
+                <div style={{ marginTop: 6, color: 'var(--ink-soft)', fontSize: 13.5, lineHeight: 1.45 }}>{text}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{
+          border: '1px solid var(--line)',
+          borderRadius: 8,
+          background: 'var(--surface)',
+          padding: 20,
+          boxShadow: 'var(--shadow-sm)',
+        }}>
+          <ExpertList title="How we want to evaluate learning" items={evaluation}/>
+        </div>
+      </div>
+
+      <div style={{
+        marginTop: 18,
+        borderRadius: 8,
+        background: 'var(--primary-soft)',
+        border: '1px solid rgba(232,93,44,0.2)',
+        padding: 20,
+      }}>
+        <ExpertList title="Questions for CHAI researchers" items={questions} columns/>
+      </div>
+    </section>
+  );
+}
+
+function ExpertList({ title, items, columns = false }) {
+  return (
+    <div>
+      <h3 style={{
+        fontFamily: 'var(--font-display)',
+        fontSize: 20,
+        lineHeight: 1.1,
+        margin: '0 0 12px',
+      }}>
+        {title}
+      </h3>
+      <ul style={{
+        margin: 0,
+        padding: 0,
+        listStyle: 'none',
+        display: 'grid',
+        gridTemplateColumns: columns ? 'repeat(auto-fit, minmax(230px, 1fr))' : '1fr',
+        gap: 9,
+      }}>
+        {items.map((item) => (
+          <li key={item} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', color: 'var(--ink-soft)', fontSize: 13.8, lineHeight: 1.42 }}>
+            <Icon.Check size={14} style={{ color: 'var(--accent)', marginTop: 2 }}/>
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function FeedbackSection() {
+  const items = ['Role or background', 'Causality familiarity', 'Where it got stuck', 'Follow-up permission'];
+  return (
+    <section id="feedback" style={{
+      scrollMarginTop: 76,
+      padding: '52px clamp(20px, 5vw, 64px) 64px',
+      background: 'linear-gradient(180deg, var(--bg-soft), var(--surface))',
+    }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1fr) auto',
+        gap: 24,
+        alignItems: 'start',
+      }} className="feedback-grid">
+        <div>
+          <HomeSectionHeader
+            eyebrow="30-second feedback"
+            title="Tell us what landed."
+            text="The booth form asks who you are, whether the causal idea made sense, where the explanation got stuck, and whether follow-up is welcome."
+          />
+          <div style={{
+            marginTop: 22,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+            gap: 12,
+            maxWidth: 720,
+          }}>
+            {items.map((item) => (
+              <div key={item} style={{
+                border: '1px solid var(--line)',
+                borderRadius: 8,
+                background: 'var(--surface)',
+                padding: 14,
+                boxShadow: 'var(--shadow-sm)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 9,
+                color: 'var(--ink-soft)',
+                fontWeight: 800,
+                fontSize: 13.5,
+              }}>
+                <Icon.Check size={15} style={{ color: 'var(--accent)' }}/>
+                {item}
+              </div>
+            ))}
+          </div>
+          <a href={FEEDBACK_URL} target="_blank" rel="noreferrer" style={{
+            marginTop: 22,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 9,
+            padding: '13px 16px',
+            borderRadius: 10,
+            background: 'var(--primary)',
+            color: '#fff',
+            fontWeight: 900,
+            fontSize: 15,
+            textDecoration: 'none',
+          }}>
+            Open Microsoft Forms <Icon.ArrowR size={16}/>
+          </a>
+        </div>
+        <div style={{
+          width: 210,
+          border: '1px solid var(--line)',
+          borderRadius: 8,
+          background: 'var(--surface)',
+          padding: 14,
+          boxShadow: 'var(--shadow)',
+        }}>
+          <img src="assets/qr-feedback.png" alt="QR code for EducAgent feedback" style={{ width: '100%', height: 'auto', display: 'block' }}/>
+          <div style={{ marginTop: 10, fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 19, lineHeight: 1.1 }}>
+            Feedback QR
+          </div>
+          <a href={FEEDBACK_URL} target="_blank" rel="noreferrer" style={{
+            display: 'inline-block',
+            marginTop: 6,
+            color: 'var(--primary)',
+            fontSize: 12.5,
+            fontWeight: 800,
+            overflowWrap: 'anywhere',
+          }}>
+            {FEEDBACK_DISPLAY_URL}
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PageBackBar({ onGoHome }) {
+  return (
+    <div style={{
+      padding: '18px clamp(20px, 5vw, 64px)',
+      borderBottom: '1px solid var(--line-soft)',
+      background: 'var(--surface)',
+    }}>
+      <button onClick={onGoHome} style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 7,
+        padding: '9px 12px',
+        borderRadius: 10,
+        border: '1px solid var(--line)',
+        background: 'var(--surface)',
+        color: 'var(--ink-soft)',
+        fontWeight: 800,
+        fontSize: 13,
+      }}>
+        <Icon.ArrowL size={14}/> Homepage
+      </button>
+    </div>
+  );
+}
+
+function ExpertPage({ onGoHome }) {
+  return (
+    <div style={{ minHeight: 'calc(100vh - 64px)', background: 'var(--surface)' }}>
+      <PageBackBar onGoHome={onGoHome}/>
+      <ExpertTrustSection/>
+    </div>
+  );
+}
+
+function FeedbackPage({ onGoHome }) {
+  return (
+    <div style={{ minHeight: 'calc(100vh - 64px)', background: 'var(--surface)' }}>
+      <PageBackBar onGoHome={onGoHome}/>
+      <FeedbackSection/>
+    </div>
+  );
+}
+
 // ============ Public homepage ============
 
-function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
+function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner, onOpenBooth, onOpenExpert }) {
   const featureItems = [
     {
       icon: 'Book',
@@ -1063,8 +2373,7 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
     {
       icon: 'Graph',
       title: 'See the hidden path',
-      badge: 'coming soon',
-      text: 'EducAgent turns abstract causal ideas into maps, arrows, examples, and quick checks you can follow without formulas first.',
+      text: 'Booth Mode now turns the hidden causal path into a quick reveal: choose an answer, open the graph, then continue into the full lesson.',
     },
     {
       icon: 'Sparkle',
@@ -1123,7 +2432,7 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
           }}>
             Learn causality with no barrier. A friendly agent tutor turns causal thinking into small stories, visual maps, and checks anyone can follow.
           </p>
-          <div className="home-actions" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 30 }}>
+          <div className="home-actions" style={{ display: 'flex', gap: 12, flexWrap: 'nowrap', alignItems: 'center', marginTop: 30 }}>
             <button className="home-primary-cta" onClick={() => onStart(selectedLearner)} style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -1135,9 +2444,26 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
               fontWeight: 800,
               fontSize: 15,
               boxShadow: '0 12px 26px rgba(232,93,44,0.26)',
+              whiteSpace: 'nowrap',
             }}>
               <Icon.Play size={17}/>
               Start learning
+            </button>
+            <button className="home-secondary-cta" onClick={onOpenBooth} style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 9,
+              padding: '13px 17px',
+              borderRadius: 12,
+              background: 'var(--ink)',
+              color: '#fff',
+              border: '1px solid var(--ink)',
+              fontWeight: 800,
+              fontSize: 15,
+              whiteSpace: 'nowrap',
+            }}>
+              <Icon.Target size={17}/>
+              Booth mode
             </button>
             <a className="home-secondary-cta" href="#how-it-works" style={{
               display: 'inline-flex',
@@ -1151,6 +2477,7 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
               textDecoration: 'none',
               fontWeight: 800,
               fontSize: 15,
+              whiteSpace: 'nowrap',
             }}>
               <Icon.Compass size={17}/>
               See how it works
@@ -1290,7 +2617,65 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner }) {
         </div>
       </section>
 
+      <section style={{
+        padding: '30px clamp(20px, 5vw, 64px)',
+        background: 'var(--ink)',
+        color: '#fff',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 18,
+          flexWrap: 'wrap',
+        }}>
+          <div style={{ maxWidth: 650 }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              color: 'var(--sun)',
+              fontSize: 12,
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              marginBottom: 8,
+            }}>
+              <Icon.Notebook size={14}/> Researcher view
+            </div>
+            <h2 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(26px, 3.8vw, 40px)',
+              lineHeight: 1,
+              margin: 0,
+              letterSpacing: '0',
+            }}>
+              Need the rigor snapshot for experts?
+            </h2>
+            <p style={{ margin: '10px 0 0', color: 'rgba(255,255,255,0.78)', fontSize: 15.5, lineHeight: 1.55 }}>
+              One page separates live demo scope, prototype claims, causal concepts, evaluation ideas, and questions for CHAI researchers.
+            </p>
+          </div>
+          <button onClick={onOpenExpert} style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 9,
+            minHeight: 48,
+            padding: '13px 16px',
+            borderRadius: 10,
+            background: 'var(--surface)',
+            color: 'var(--ink)',
+            fontWeight: 900,
+            fontSize: 15,
+            whiteSpace: 'nowrap',
+          }}>
+            Expert trust page <Icon.ArrowR size={16}/>
+          </button>
+        </div>
+      </section>
+
       <PartnerLinksSection />
+      <FeedbackHomeSection/>
     </div>
   );
 }
@@ -1444,6 +2829,107 @@ function PartnerLinksSection() {
   );
 }
 
+function FeedbackHomeSection() {
+  return (
+    <section style={{
+      padding: '34px clamp(20px, 5vw, 64px) 48px',
+      background: 'var(--bg-soft)',
+      borderTop: '1px solid var(--line-soft)',
+    }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(0, 1fr) auto',
+        gap: 22,
+        alignItems: 'center',
+      }} className="home-feedback-grid">
+        <div>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            color: 'var(--primary)',
+            fontSize: 12,
+            fontWeight: 900,
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            marginBottom: 8,
+          }}>
+            <Icon.Target size={14}/> Booth feedback
+          </div>
+          <h2 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(28px, 4.2vw, 46px)',
+            lineHeight: 1,
+            letterSpacing: '0',
+            margin: 0,
+            maxWidth: 720,
+          }}>
+            Help us learn what landed.
+          </h2>
+          <p style={{ margin: '12px 0 0', maxWidth: 680, color: 'var(--ink-soft)', fontSize: 16, lineHeight: 1.58 }}>
+            A 30-second form captures role, causality familiarity, where the explanation got stuck, and whether follow-up is welcome.
+          </p>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '118px minmax(150px, 1fr)',
+          gap: 14,
+          alignItems: 'center',
+          border: '1px solid var(--line)',
+          borderRadius: 8,
+          background: 'var(--surface)',
+          padding: 14,
+          boxShadow: 'var(--shadow-sm)',
+        }} className="home-feedback-card">
+          <div style={{
+            width: 118,
+            height: 118,
+            padding: 8,
+            borderRadius: 8,
+            background: '#fff',
+            border: '1px solid var(--line-soft)',
+          }}>
+            <img src="assets/qr-feedback.png" alt="QR code for EducAgent feedback" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}/>
+          </div>
+          <div>
+            <a href={FEEDBACK_URL} target="_blank" rel="noreferrer" style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              width: '100%',
+              minHeight: 44,
+              padding: '11px 13px',
+              borderRadius: 10,
+              background: 'var(--primary)',
+              color: '#fff',
+              fontWeight: 900,
+              fontSize: 14,
+              whiteSpace: 'nowrap',
+              textDecoration: 'none',
+            }}>
+              Open feedback <Icon.ArrowR size={15}/>
+            </a>
+            <a href={FEEDBACK_URL} target="_blank" rel="noreferrer" style={{
+              display: 'block',
+              marginTop: 9,
+              color: 'var(--ink-soft)',
+              fontSize: 12.5,
+              fontWeight: 800,
+              textDecoration: 'underline',
+              textUnderlineOffset: 3,
+              overflowWrap: 'anywhere',
+            }}>
+              {FEEDBACK_DISPLAY_URL}
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function HomeSectionHeader({ eyebrow, title, text }) {
   return (
     <div style={{ maxWidth: 980 }}>
@@ -1522,9 +3008,19 @@ function LearningPathCard({ icon, title, label, text, button, active, disabled, 
 
 // ============ Main App ============
 
+function viewFromHash(hash) {
+  if (hash === '#booth') return 'booth';
+  if (hash === '#feedback') return 'feedback';
+  if (hash === '#expert') return 'expert';
+  return 'home';
+}
+
 function App() {
+  const initialHash = window.location.hash;
   const [selectedLearner, setSelectedLearner] = useS('learner_0');
-  const [view, setView] = useS('home');
+  const [view, setView] = useS(viewFromHash(initialHash));
+  const audioPlayer = useAudioPlayer();
+  const [audioManifest, setAudioManifest] = useS(null);
   const [courseState, setCourseState] = useS({
     status: 'loading',
     config: COURSE_CONFIGS.learner_0,
@@ -1541,7 +3037,17 @@ function App() {
   }, []);
 
   useE(() => {
+    const routeFromHash = () => {
+      setView(viewFromHash(window.location.hash));
+    };
+    routeFromHash();
+    window.addEventListener('hashchange', routeFromHash);
+    return () => window.removeEventListener('hashchange', routeFromHash);
+  }, []);
+
+  useE(() => {
     let cancelled = false;
+    audioPlayer.stop();
     setCourseState((state) => ({
       ...state,
       status: 'loading',
@@ -1569,11 +3075,46 @@ function App() {
     return () => { cancelled = true; };
   }, [selectedLearner]);
 
+  useE(() => {
+    let cancelled = false;
+    const manifestPath = COURSE_CONFIGS[selectedLearner]?.audioManifestPath;
+    setAudioManifest(null);
+    if (!manifestPath) return () => { cancelled = true; };
+
+    fetch(manifestPath, { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((manifest) => {
+        if (!cancelled) setAudioManifest(manifest);
+      })
+      .catch(() => {
+        if (!cancelled) setAudioManifest(null);
+      });
+
+    return () => { cancelled = true; };
+  }, [selectedLearner]);
+
   const lessons = courseState.lessons;
   const lesson = lessons.find(l => l.id === currentLesson) || lessons[0];
   const lessonIndex = Math.max(0, lessons.findIndex(l => l.id === lesson?.id));
-  const nextLearner = selectedLearner === 'learner_0' ? 'learner_1' : 'learner_0';
+  const setHash = (hash) => {
+    if (window.history?.replaceState) window.history.replaceState(null, '', hash || window.location.pathname);
+  };
+  const goHome = () => {
+    setHash('');
+    setView('home');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  };
+  const openPage = (hash, nextView) => {
+    setHash(hash);
+    setView(nextView);
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    });
+  };
+  const openBooth = () => openPage('#booth', 'booth');
+  const openExpert = () => openPage('#expert', 'expert');
   const startLearning = (learnerId = selectedLearner) => {
+    setHash('');
     setSelectedLearner(learnerId);
     setView('lesson');
     window.scrollTo({ top: 0, behavior: 'auto' });
@@ -1585,24 +3126,31 @@ function App() {
     });
   };
 
+  useE(() => {
+    if (!['booth', 'feedback', 'expert'].includes(view)) return;
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    });
+  }, [view]);
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <TopBar
         course={courseState.config}
         selectedLearner={selectedLearner}
-        nextLearner={nextLearner}
-        onSwitchLearner={() => setSelectedLearner(nextLearner)}
-        onGoHome={() => setView('home')}
+        audienceOptions={AUDIENCE_OPTIONS}
+        onPickLearner={setSelectedLearner}
+        onGoHome={goHome}
         loading={courseState.status === 'loading'}
       />
 
       <main style={{
         width: '100%',
-        maxWidth: 1120,
+        maxWidth: view === 'booth' ? 'none' : 1120,
         margin: '0 auto',
         background: 'var(--surface)',
         minHeight: 'calc(100vh - 64px)',
-        boxShadow: '0 0 0 1px var(--line-soft)',
+        boxShadow: view === 'booth' ? 'none' : '0 0 0 1px var(--line-soft)',
       }}>
         {view === 'home' && (
           <HomePage
@@ -1610,7 +3158,26 @@ function App() {
             selectedLearner={selectedLearner}
             onStart={startLearning}
             onPickLearner={setSelectedLearner}
+            onOpenBooth={openBooth}
+            onOpenExpert={openExpert}
           />
+        )}
+
+        {view === 'booth' && (
+          <BoothPage
+            selectedLearner={selectedLearner}
+            onPickLearner={setSelectedLearner}
+            onStart={startLearning}
+            onGoHome={goHome}
+          />
+        )}
+
+        {view === 'feedback' && (
+          <FeedbackPage onGoHome={goHome}/>
+        )}
+
+        {view === 'expert' && (
+          <ExpertPage onGoHome={goHome}/>
         )}
 
         {view === 'lesson' && courseState.status === 'error' && (
@@ -1635,6 +3202,8 @@ function App() {
             onNext={() => goToLesson(lessons[Math.min(lessons.length - 1, lessonIndex + 1)].id)}
             hasPrev={lessonIndex > 0}
             hasNext={lessonIndex < lessons.length - 1}
+            audioManifest={audioManifest}
+            audioPlayer={audioPlayer}
           />
         )}
       </main>

@@ -1,0 +1,35 @@
+{
+  "user_id": "learner_8",
+  "concept_id": "interventions",
+  "adaptation_ctx": {
+    "background": "Public CHAIFest visitor with no causality background",
+    "role": "Curious public learner",
+    "prior_knowledge": [],
+    "expertise_level": "new_to_causality",
+    "learning_goal": "Understand why a healthcare attendance pattern is not always proof of cause and effect",
+    "domain_framing": "public healthcare appointment attendance demo"
+  },
+  "depth_tier": "beginner",
+  "profile_sig": "PUBLIC-BEG",
+  "progress_ctx": {
+    "completed": [],
+    "mastery_scores": {}
+  },
+  "confusion_fwd": [],
+  "concept_ctx": {
+    "concept_id": "interventions",
+    "prerequisite": []
+  },
+  "grounded_chunks": [
+    {
+      "source": "CHAIFest request",
+      "text": "Use GP or clinic appointment text reminders. Central question: Patients who received a text reminder were more likely to attend their appointment. Does that mean the text reminder caused better attendance? Use variables Z = patient engagement / digital access / life stability, T = receiving a text reminder, Y = attending the appointment. Explain that Z may affect both T and Y. Explain random assignment of reminders among eligible patients as the intervention idea. Keep medically safe: no clinical advice or treatment effectiveness claims.",
+      "score": 1.0
+    },
+    {
+      "source": "ECI",
+      "text": "An intervention replaces the usual assignment mechanism for a variable. Under a hard intervention on T, incoming causes of T are removed, while other relevant causal links may remain.",
+      "score": 0.95
+    }
+  ]
+}

@@ -1,0 +1,324 @@
+{
+  "cache_key": "interventions:PUBLIC-BEG",
+  "concept_id": "interventions",
+  "profile_sig": "PUBLIC-BEG",
+  "outline": [
+    {
+      "title": "The Reminder Puzzle",
+      "summary": "Start from the visible attendance gap between reminded and non-reminded patients, then reveal that a hidden factor — patient engagement and life stability — may be quietly driving both who gets a reminder and who shows up anyway.",
+      "rag_focus": "observational versus interventional distributions; conditioning is not intervention",
+      "anchor_use": "Show the three-variable graph with Z=PatientEngagement, T=ReceivedReminder, Y=AttendedAppointment. Ask visitors: 'Could something else explain why reminded patients attend more?' Then reveal the two arrows out of Z and let visitors guess what Z might represent.",
+      "target_misconception": "If reminded patients attend more often, the reminder must have caused better attendance.",
+      "anchor_mode": "reuse_anchor",
+      "interaction_hook": "Visitors choose from three candidate hidden drivers — 'already motivated', 'has a working phone', 'lives nearby' — and discuss which ones could affect both receiving a reminder and showing up.",
+      "learning_arc_position": "Start with a pattern people can recognize, then reveal the hidden driver.",
+      "changed_assumptions": [],
+      "must_preserve_edges": [
+        "PatientEngagement (Z) -> ReceivedReminder (T)",
+        "PatientEngagement (Z) -> AttendedAppointment (Y)",
+        "ReceivedReminder (T) -> AttendedAppointment (Y)"
+      ],
+      "variant_explanation_required": false
+    },
+    {
+      "title": "Changing the Rule",
+      "summary": "Explain intervention as the clinic deciding by design — perhaps by a coin flip — which patients get a reminder, so that the hidden driver no longer controls who is selected. This breaks the link from Z into T and lets us see what the reminder alone does.",
+      "rag_focus": "changing the assignment rule replaces one assignment mechanism; redesigned groups can differ from observed groups",
+      "anchor_use": "Use the same three-variable graph and show the arrow from PatientEngagement (Z) into ReceivedReminder (T) being crossed out when the clinic assigns reminders randomly. Ask: 'Now that engagement no longer decides who gets a reminder, what changes about what we can learn?'",
+      "target_misconception": "Filtering to patients who happened to receive a reminder is the same as deliberately assigning reminders by design.",
+      "anchor_mode": "reuse_anchor",
+      "interaction_hook": "Visitors are shown two side-by-side graphs — one with the Z-to-T arrow intact, one with it removed — and asked: 'Which graph lets us fairly test the reminder?' They tap or point to their choice before the explanation is revealed.",
+      "learning_arc_position": "Ask the intervention question: what if we changed the rule?",
+      "changed_assumptions": [],
+      "must_preserve_edges": [
+        "PatientEngagement (Z) -> ReceivedReminder (T)",
+        "PatientEngagement (Z) -> AttendedAppointment (Y)",
+        "ReceivedReminder (T) -> AttendedAppointment (Y)"
+      ],
+      "variant_explanation_required": false
+    }
+  ],
+  "anchor_case": {
+    "scenario": "Patients who received a clinic text reminder were more likely to attend their appointment — but does the reminder itself deserve the credit?",
+    "variables": {
+      "PriorAchievement": {
+        "role": "covariate",
+        "description": "How engaged, digitally connected, and life-stable a patient already is before any reminder is sent.",
+        "original_role": "confounder"
+      },
+      "TutoringAssignment": {
+        "role": "treatment",
+        "description": "Whether a patient receives a text reminder about their appointment."
+      },
+      "TestScore": {
+        "role": "outcome",
+        "description": "Whether the patient actually attends the appointment."
+      }
+    },
+    "letter_map": {
+      "PriorAchievement": "Z",
+      "TutoringAssignment": "T",
+      "TestScore": "Y"
+    },
+    "causal_edges": [
+      "PatientEngagement (Z) -> ReceivedReminder (T)",
+      "PatientEngagement (Z) -> AttendedAppointment (Y)",
+      "ReceivedReminder (T) -> AttendedAppointment (Y)"
+    ],
+    "forbidden_edges": [
+      "AttendedAppointment (Y) -> ReceivedReminder (T) in the same appointment window"
+    ],
+    "simplifying_assumptions": [
+      "Use a single appointment window: the reminder is sent before attendance is recorded.",
+      "Future attendance patterns could influence future reminder targeting, but that would need a time-indexed story."
+    ],
+    "rationale": "Text reminders and clinic attendance are immediately familiar to any adult who uses healthcare, making the hidden-driver reveal feel personally relevant without requiring any clinical knowledge.",
+    "anchor_plausibility_check": {
+      "would_an_expert_accept": true,
+      "role_scope_match": "The story is framed for public understanding rather than professional practice; no clinical advice or treatment effectiveness claims are made.",
+      "magnitudes_reasonable": "The scenario uses ordinary attendance comparisons and does not depend on numerical magnitudes.",
+      "most_likely_expert_objection": "Reminder delivery may depend on having a valid mobile number on file, which is itself correlated with engagement; the confounder could be multidimensional."
+    },
+    "domain_assumptions_used": [
+      "Patients can differ in engagement, digital access, and life stability before any reminder is sent.",
+      "Whether a patient ends up receiving a reminder may depend on those same background factors.",
+      "Those background factors can also directly affect whether the patient attends."
+    ],
+    "anchor_invariants": {
+      "direct_edges": [
+        "PatientEngagement -> ReceivedReminder",
+        "PatientEngagement -> AttendedAppointment",
+        "ReceivedReminder -> AttendedAppointment"
+      ],
+      "children": {
+        "AttendedAppointment": [],
+        "PatientEngagement": [
+          "AttendedAppointment",
+          "ReceivedReminder"
+        ],
+        "ReceivedReminder": [
+          "AttendedAppointment"
+        ]
+      },
+      "parents": {
+        "AttendedAppointment": [
+          "PatientEngagement",
+          "ReceivedReminder"
+        ],
+        "PatientEngagement": [],
+        "ReceivedReminder": [
+          "PatientEngagement"
+        ]
+      },
+      "sources": [
+        "PatientEngagement"
+      ],
+      "sinks": [
+        "AttendedAppointment"
+      ]
+    },
+    "anchor_schema_repairs": [
+      {
+        "variable": "PriorAchievement",
+        "old_role": "confounder",
+        "new_role": "covariate",
+        "reason": "The declared edge list does not make this variable a cause of both treatment and outcome."
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "node_title": "The Reminder Puzzle",
+      "sections": [
+        {
+          "section": "The Reminder Puzzle",
+          "content": "You get a text from your clinic: *'Don't forget your appointment tomorrow!'* Later, the clinic checks its records and notices something striking — patients who received that text were much more likely to show up than patients who did not.\n\nShould the clinic celebrate? Did the text reminder *cause* better attendance?\n\nNot so fast. This lesson is about that puzzle.\n\n[CONTEXT_IMAGE: A split scene inside a modern GP clinic waiting room. On the left half, a patient holds a phone showing a text notification reading 'Appointment reminder: tomorrow 10am'. On the right half, another patient sits at home looking uncertain, no phone in hand. A large question mark floats between the two halves. Warm, friendly illustration style. No text beyond the phone notification label.]\n\n> **After this mini lesson, you will be able to:**\n> - Spot why a pattern in data does not automatically prove cause and effect.\n> - Name the hidden factor that might quietly explain the attendance gap.\n> - Describe, in plain words, what it would mean to truly *test* whether a reminder works.",
+          "markers": [
+            "[CONTEXT_IMAGE: A split scene inside a modern GP clinic waiting room. On the left half, a patient holds a phone showing a text notification reading 'Appointment reminder: tomorrow 10am'. On the right half, another patient sits at home looking uncertain, no phone in hand. A large question mark floats between the two halves. Warm, friendly illustration style. No text beyond the phone notification label.]"
+          ],
+          "part": "hook"
+        },
+        {
+          "section": "Before We Dive In",
+          "content": "Most of us have a very natural instinct: *if two things happen together, one probably caused the other.* Reminded patients show up more → reminders must work. It feels obvious.\n\nBut here is the trap. The patients who received a reminder and the patients who did not may have already been different from each other *before* any text was ever sent. Some patients have a stable routine, a charged phone, and a registered mobile number on file. Others are harder to reach — maybe they move frequently, work unpredictable hours, or have an old number on record. Those background differences could be doing most of the heavy lifting, quietly shaping both *who gets a reminder* and *who shows up anyway*.\n\nSo the attendance gap might be real, but the reminder might deserve less credit than it appears to.",
+          "markers": [],
+          "part": "recall"
+        },
+        {
+          "section": "Meet the Hidden Driver",
+          "content": "Let's give our three players proper names.\n\n- **PatientEngagement ($Z$):** How engaged, digitally connected, and life-stable a patient already is before any reminder is sent. Think: do they have a working mobile number on file? Do they tend to keep appointments?\n- **ReceivedReminder ($T$):** Whether the clinic's system actually sent a text to that patient.\n- **AttendedAppointment ($Y$):** Whether the patient walked through the clinic door.\n\nHere is the key idea: **Z quietly influences both T and Y at the same time.**\n\nA highly engaged patient is more likely to have a valid number on file, so the system can reach them — that is Z nudging T. That same patient is also more likely to show up regardless — that is Z nudging Y directly. So even if the reminder did *nothing at all*, we would still see reminded patients attending more, simply because they were already a different group.\n\nThis kind of hidden driver — one that pulls on both the thing we changed and the outcome we care about — is called a **confounder**. Patient engagement is the confounder here, and it can make the reminder look more powerful than it really is.\n\n[CONTEXT_IMAGE: Three illustrated cards arranged in a triangle on a light background. The top card is labelled 'Patient Engagement' and shows a small icon of a person with a calendar and a phone signal bar. The bottom-left card is labelled 'Received Reminder' and shows a phone with a notification bell. The bottom-right card is labelled 'Attended Appointment' and shows a clinic door with a green tick. Two bold roads lead downward from the top card to each of the two lower cards. A third road connects the bottom-left card to the bottom-right card. A caption beneath reads: 'The top card quietly drives both roads below it.' Flat design, no extra decoration.]",
+          "markers": [
+            "[CONTEXT_IMAGE: Three illustrated cards arranged in a triangle on a light background. The top card is labelled 'Patient Engagement' and shows a small icon of a person with a calendar and a phone signal bar. The bottom-left card is labelled 'Received Reminder' and shows a phone with a notification bell. The bottom-right card is labelled 'Attended Appointment' and shows a clinic door with a green tick. Two bold roads lead downward from the top card to each of the two lower cards. A third road connects the bottom-left card to the bottom-right card. A caption beneath reads: 'The top card quietly drives both roads below it.' Flat design, no extra decoration.]"
+          ],
+          "part": "intuition"
+        },
+        {
+          "section": "Seeing the Structure",
+          "content": "Here is the full picture of how our three variables connect.\n\n```mermaid\ngraph LR\n    Z[PatientEngagement] --> T[ReceivedReminder]\n    Z[PatientEngagement] --> Y[AttendedAppointment]\n    T[ReceivedReminder] --> Y[AttendedAppointment]\n```\n\nNotice that PatientEngagement sits at the top, with roads leading to *both* ReceivedReminder and AttendedAppointment. That is what makes it a confounder — it is a common upstream driver of the two things we are comparing.\n\n**So what would it take to know if the reminder truly works?**\n\nWe would need to change the reminder rule ourselves: send texts to a randomly chosen mix of patients, regardless of their engagement level. When we do this, the road from PatientEngagement into ReceivedReminder is cut. Engagement can no longer sneak in and tilt the comparison. What remains is a cleaner estimate of what the reminder alone actually does.\n\n[PEDAGOGICAL_IMAGE: Two side-by-side panels, each showing the same three cards from the earlier image. Panel 1 is labelled 'What we observed' — all three roads are intact and coloured blue, with a note reading 'Engagement quietly shapes who gets a reminder'. Panel 2 is labelled 'If we randomly assign reminders' — the road from the top card to the bottom-left card has a bold red X drawn through it, while the other two roads remain blue. A caption reads: 'Cutting that one link lets us see the reminder effect on its own.' Clean flat design, no extra decoration.]",
+          "markers": [
+            "[PEDAGOGICAL_IMAGE: Two side-by-side panels, each showing the same three cards from the earlier image. Panel 1 is labelled 'What we observed' — all three roads are intact and coloured blue, with a note reading 'Engagement quietly shapes who gets a reminder'. Panel 2 is labelled 'If we randomly assign reminders' — the road from the top card to the bottom-left card has a bold red X drawn through it, while the other two roads remain blue. A caption reads: 'Cutting that one link lets us see the reminder effect on its own.' Clean flat design, no extra decoration.]"
+          ],
+          "part": "visual"
+        },
+        {
+          "section": "Check Your Understanding",
+          "content": "**Question 1.** The clinic finds that patients who received a text reminder attended more often. What is the safest conclusion from this observation alone?\n\nA. The reminder definitely caused better attendance.\nB. There is a pattern, but something else might also explain it.\nC. Patient engagement has no effect on attendance.\nD. The clinic should stop sending reminders immediately.\n\n---\n\n**Question 2.** In our story, PatientEngagement ($Z$) influences both ReceivedReminder ($T$) and AttendedAppointment ($Y$). What do we call a factor that does this?\n\nA. A confounder.\nB. An outcome.\nC. A random assignment.\nD. A text notification.\n\n---\n\n**Question 3.** The clinic decides to send reminders to a randomly chosen group of patients, regardless of their engagement level. What does this random assignment mainly achieve?\n\nA. It guarantees every patient will attend their appointment.\nB. It removes all differences between patients forever.\nC. It breaks the link between patient engagement and who receives a reminder, giving a cleaner estimate of the reminder's effect.\nD. It proves that patient engagement does not exist.\n\n---\n\n<details>\n<summary>Show Answers</summary>\n\n**Answer 1: B.** The pattern is real, but PatientEngagement could be driving both who gets a reminder and who attends — so the reminder alone may not deserve all the credit.\n\n**Answer 2: A.** A confounder is a hidden factor that influences both the treatment and the outcome at the same time, making the two look more connected than they might be.\n\n**Answer 3: C.** Random assignment means engagement no longer determines who gets a reminder. That cuts the confounding road and gives a cleaner look at what the reminder itself does — though no finite study is perfectly noise-free.\n\n</details>",
+          "markers": [],
+          "part": "checkpoint"
+        }
+      ]
+    },
+    {
+      "node_title": "Changing the Rule",
+      "sections": [
+        {
+          "section": "Changing the Rule",
+          "content": "> **After this mini lesson, you will be able to:**\n> - Explain the difference between patients who *happened* to get a reminder and patients who were *assigned* one by design.\n> - Describe what a coin-flip assignment does to the link between PatientEngagement ($Z$) and ReceivedReminder ($T$).\n> - Say in plain words why breaking that link helps us learn what the reminder alone does.\n\nIn the last stop we saw a puzzle: patients who got a text reminder attended more often, but highly engaged patients were already more likely to both receive a reminder *and* show up. So the reminder and attendance moved together — but was the reminder actually driving attendance, or were both just following the patient's engagement level?\n\nThis stop is about a simple but powerful idea: what if the clinic *took over* the decision of who gets a reminder, ignoring engagement entirely?\n\n[CONTEXT_IMAGE: A split photograph. On the left, a clinic receptionist manually sorting patient files into two piles labelled 'send reminder' and 'no reminder', with a sticky note reading 'engaged patients only'. On the right, the same receptionist holding a large coin mid-flip above a single mixed pile of files, with both piles now labelled by a random outcome. Warm clinic lighting, realistic style, no text beyond the two sticky-note labels shown.]",
+          "markers": [
+            "[CONTEXT_IMAGE: A split photograph. On the left, a clinic receptionist manually sorting patient files into two piles labelled 'send reminder' and 'no reminder', with a sticky note reading 'engaged patients only'. On the right, the same receptionist holding a large coin mid-flip above a single mixed pile of files, with both piles now labelled by a random outcome. Warm clinic lighting, realistic style, no text beyond the two sticky-note labels shown.]"
+          ],
+          "part": "hook"
+        },
+        {
+          "section": "Before We Dive In",
+          "content": "Here is the misconception this stop tackles head-on:\n\n**'If I look only at patients who received a reminder, I can see what the reminder does.'**\n\nThis feels reasonable — you are comparing people who got the message with people who did not. But the group who received reminders was not chosen at random. In many clinics, reminders reach patients who already have a valid mobile number on file, stable schedules, and a habit of engaging with their healthcare. Those patients were already different from patients who never got a reminder, *before* any message was sent.\n\nFiltering to 'patients who happened to receive a reminder' is not the same as deliberately handing reminders out by design. The first approach keeps PatientEngagement ($Z$) quietly in charge of who lands in which group. The second approach takes that control away from Z entirely. That distinction is everything.",
+          "markers": [],
+          "part": "recall"
+        },
+        {
+          "section": "What 'Changing the Rule' Actually Means",
+          "content": "Normally, the clinic's reminder system follows an unwritten rule: patients who are more engaged, digitally connected, and life-stable ($Z$) are more likely to end up receiving a reminder ($T$). That rule is just how things happen — nobody planned it as a study.\n\nNow imagine the clinic decides to *replace that rule*. Instead of letting engagement drive who gets a reminder, a coordinator flips a coin for each eligible patient. Heads: you get the reminder. Tails: you do not. Engagement still affects whether you attend ($Z \\rightarrow Y$ stays in place — an engaged person is still more likely to show up regardless). But engagement no longer decides who gets the reminder. The coin does.\n\nResearchers call this an **intervention** because we change the rule ourselves. That act of changing the rule is what removes engagement's grip on reminder assignment. The two groups produced by the coin flip are now mixed: high-engagement and low-engagement patients appear in both the 'got reminder' and 'no reminder' groups. Any difference in attendance between the groups can no longer be blamed on engagement. It can only come from the reminder itself.\n\nThis is why random assignment gives a cleaner estimate of the reminder's effect. It does not guarantee a perfect answer in any single trial — real data always has noise — but it removes the systematic tilt that engagement was creating.",
+          "markers": [],
+          "part": "intuition"
+        },
+        {
+          "section": "See the Arrow Disappear",
+          "content": "Here is the causal picture in the normal, observational world — where engagement quietly controls who gets a reminder:\n\n```mermaid\ngraph LR\n    Z[PatientEngagement Z] --> T[ReceivedReminder T]\n    Z --> Y[AttendedAppointment Y]\n    T --> Y\n```\n\nAll three links are active. Z feeds into both T and Y, which is exactly what makes it hard to isolate what T does on its own.\n\nNow the clinic flips a coin. The link from Z into T is cut:\n\n[PEDAGOGICAL_IMAGE: Two side-by-side panels with a clean white background. Left panel is labelled 'Before: engagement decides'. It shows three rounded cards arranged in a triangle. The top-left card reads 'Patient Engagement Z'. The top-right card reads 'Received Reminder T'. The bottom card reads 'Attended Appointment Y'. A solid red road connects Z to T, a solid road connects Z to Y, and a solid road connects T to Y. Right panel is labelled 'After: coin flip decides'. The same three cards appear, but the road between Z and T is replaced by a bold red X drawn across it, and a small gold coin icon sits above T. The roads from Z to Y and from T to Y remain solid. A caption below reads: 'Engagement no longer picks who gets the reminder. The coin does.' Flat illustration style, no gradients.]\n\n**Now that engagement no longer decides who gets a reminder, what changes about what we can learn?**\n\nWith that link severed, the two reminder groups — those who got the text and those who did not — are no longer systematically different in their engagement levels. Whatever difference in attendance we see between the groups reflects the reminder's own contribution, not a hidden engagement advantage. We have isolated the path $T \\rightarrow Y$.",
+          "markers": [
+            "[PEDAGOGICAL_IMAGE: Two side-by-side panels with a clean white background. Left panel is labelled 'Before: engagement decides'. It shows three rounded cards arranged in a triangle. The top-left card reads 'Patient Engagement Z'. The top-right card reads 'Received Reminder T'. The bottom card reads 'Attended Appointment Y'. A solid red road connects Z to T, a solid road connects Z to Y, and a solid road connects T to Y. Right panel is labelled 'After: coin flip decides'. The same three cards appear, but the road between Z and T is replaced by a bold red X drawn across it, and a small gold coin icon sits above T. The roads from Z to Y and from T to Y remain solid. A caption below reads: 'Engagement no longer picks who gets the reminder. The coin does.' Flat illustration style, no gradients.]"
+          ],
+          "part": "visual"
+        },
+        {
+          "section": "Check Your Understanding",
+          "content": "**Question 1.** In the normal clinic setting, why is it hard to tell whether the reminder itself caused better attendance?\n\nA. Because text messages are unreliable technology.\nB. Because engaged patients were already more likely to both receive a reminder and attend, even without one.\nC. Because doctors always know which patients will attend.\nD. Because attendance is measured before the reminder is sent.\n\n---\n\n**Question 2.** When the clinic assigns reminders by a coin flip, what happens to the link between PatientEngagement ($Z$) and ReceivedReminder ($T$)?\n\nA. The link is removed — engagement no longer controls who gets a reminder.\nB. The link gets stronger because engaged patients flip the coin more often.\nC. The link stays exactly the same as before.\nD. The link reverses, so reminders now cause engagement.\n\n---\n\n**Question 3.** After the coin-flip assignment, the 'got reminder' group and the 'no reminder' group both contain a mix of high-engagement and low-engagement patients. Why does that matter?\n\nA. It means the reminder will always improve attendance for everyone.\nB. It means engagement levels are now balanced across the two groups, so any attendance difference is more likely due to the reminder itself.\nC. It means we no longer need to track attendance at all.\nD. It means the clinic has eliminated all possible hidden factors forever.\n\n<details>\n<summary>Show Answers</summary>\n\n**Answer 1: B.** Engaged patients were already different before any reminder arrived — they were more likely to attend anyway. That makes it impossible to know, just from who happened to get a reminder, how much credit the reminder deserves.\n\n**Answer 2: A.** The coin flip replaces engagement as the rule that decides reminder assignment. Engagement still affects attendance directly, but it no longer controls who lands in the reminder group.\n\n**Answer 3: B.** When both groups contain a similar mix of engagement levels, that hidden driver is no longer tilting the comparison. The attendance difference between groups can then be traced back to the reminder, not to pre-existing differences in the patients.\n\n</details>",
+          "markers": [],
+          "part": "checkpoint"
+        }
+      ]
+    }
+  ],
+  "image_refs": [
+    {
+      "node_title": "The Reminder Puzzle",
+      "description": "A split scene inside a modern GP clinic waiting room. On the left half, a patient holds a phone showing a text notification reading 'Appointment reminder: tomorrow 10am'. On the right half, another patient sits at home looking uncertain, no phone in hand. A large question mark floats between the two halves. Warm, friendly illustration style. No text beyond the phone notification label.",
+      "kind": "CONTEXT_IMAGE",
+      "aspect_ratio": "4:3",
+      "section": "The Reminder Puzzle",
+      "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_8/passive_courses/interventions/imgs/img_00.png",
+      "model": "openai/gpt-5.4-image-2"
+    },
+    {
+      "node_title": "The Reminder Puzzle",
+      "description": "Three illustrated cards arranged in a triangle on a light background. The top card is labelled 'Patient Engagement' and shows a small icon of a person with a calendar and a phone signal bar. The bottom-left card is labelled 'Received Reminder' and shows a phone with a notification bell. The bottom-right card is labelled 'Attended Appointment' and shows a clinic door with a green tick. Two bold roads lead downward from the top card to each of the two lower cards. A third road connects the bottom-left card to the bottom-right card. A caption beneath reads: 'The top card quietly drives both roads below it.' Flat design, no extra decoration.",
+      "kind": "CONTEXT_IMAGE",
+      "aspect_ratio": "4:3",
+      "section": "Meet the Hidden Driver",
+      "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_8/passive_courses/interventions/imgs/img_01.png",
+      "model": "openai/gpt-5.4-image-2"
+    },
+    {
+      "node_title": "The Reminder Puzzle",
+      "description": "Two side-by-side panels, each showing the same three cards from the earlier image. Panel 1 is labelled 'What we observed' — all three roads are intact and coloured blue, with a note reading 'Engagement quietly shapes who gets a reminder'. Panel 2 is labelled 'If we randomly assign reminders' — the road from the top card to the bottom-left card has a bold red X drawn through it, while the other two roads remain blue. A caption reads: 'Cutting that one link lets us see the reminder effect on its own.' Clean flat design, no extra decoration.",
+      "kind": "PEDAGOGICAL_IMAGE",
+      "aspect_ratio": "4:3",
+      "section": "Seeing the Structure",
+      "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_8/passive_courses/interventions/imgs/img_02.png",
+      "model": "openai/gpt-5.4-image-2"
+    },
+    {
+      "node_title": "Changing the Rule",
+      "description": "A split photograph. On the left, a clinic receptionist manually sorting patient files into two piles labelled 'send reminder' and 'no reminder', with a sticky note reading 'engaged patients only'. On the right, the same receptionist holding a large coin mid-flip above a single mixed pile of files, with both piles now labelled by a random outcome. Warm clinic lighting, realistic style, no text beyond the two sticky-note labels shown.",
+      "kind": "CONTEXT_IMAGE",
+      "aspect_ratio": "4:3",
+      "section": "Changing the Rule",
+      "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_8/passive_courses/interventions/imgs/img_03.png",
+      "model": "openai/gpt-5.4-image-2"
+    },
+    {
+      "node_title": "Changing the Rule",
+      "description": "Two side-by-side panels with a clean white background. Left panel is labelled 'Before: engagement decides'. It shows three rounded cards arranged in a triangle. The top-left card reads 'Patient Engagement Z'. The top-right card reads 'Received Reminder T'. The bottom card reads 'Attended Appointment Y'. A solid red road connects Z to T, a solid road connects Z to Y, and a solid road connects T to Y. Right panel is labelled 'After: coin flip decides'. The same three cards appear, but the road between Z and T is replaced by a bold red X drawn across it, and a small gold coin icon sits above T. The roads from Z to Y and from T to Y remain solid. A caption below reads: 'Engagement no longer picks who gets the reminder. The coin does.' Flat illustration style, no gradients.",
+      "kind": "PEDAGOGICAL_IMAGE",
+      "aspect_ratio": "4:3",
+      "section": "See the Arrow Disappear",
+      "url": "/data/users/yyx/onProject/CHAI/EducAgent/data/user/learner_8/passive_courses/interventions/imgs/img_04.png",
+      "model": "openai/gpt-5.4-image-2"
+    }
+  ],
+  "fact_check_issues": [],
+  "initial_fact_check_issues": [],
+  "residual_fact_check_issues": [],
+  "qa_log": [
+    {
+      "node_title": "The Reminder Puzzle",
+      "qa_path": "critic-ran",
+      "qa_status": "passed",
+      "risk": "high",
+      "issues": 0,
+      "critical": 0,
+      "residual_issues": 0,
+      "residual_critical": 0,
+      "rewrites": 0,
+      "repair_cycles": 0,
+      "max_repair_cycles": 3,
+      "rewrite_failures": 0,
+      "rewrite_log": [],
+      "confirmation_ran": false,
+      "confirmation_failed": false,
+      "escalation_ran": false,
+      "escalation_failed": false,
+      "contract_issues": 0,
+      "contract_repairs": 0,
+      "contract_repair_log": [],
+      "dropped_unsupported_issues": 0,
+      "attempts": 17,
+      "llm_calls": 17,
+      "failed_calls": 0,
+      "prompt_tokens": 103396,
+      "completion_tokens": 8097,
+      "total_tokens": 111493,
+      "errors": []
+    },
+    {
+      "node_title": "Changing the Rule",
+      "qa_path": "critic-ran",
+      "qa_status": "passed",
+      "risk": "high",
+      "issues": 0,
+      "critical": 0,
+      "residual_issues": 0,
+      "residual_critical": 0,
+      "rewrites": 0,
+      "repair_cycles": 0,
+      "max_repair_cycles": 3,
+      "rewrite_failures": 0,
+      "rewrite_log": [],
+      "confirmation_ran": false,
+      "confirmation_failed": false,
+      "escalation_ran": false,
+      "escalation_failed": false,
+      "contract_issues": 0,
+      "contract_repairs": 0,
+      "contract_repair_log": [],
+      "dropped_unsupported_issues": 0,
+      "attempts": 16,
+      "llm_calls": 16,
+      "failed_calls": 0,
+      "prompt_tokens": 97595,
+      "completion_tokens": 12346,
+      "total_tokens": 109941,
+      "errors": []
+    }
+  ],
+  "qa_blocked": false
+}

@@ -9,7 +9,9 @@ EducAgent is a learner-facing demo that makes causality feel approachable. It in
 - A friendly homepage for a broad public audience: anyone should be able to understand the promise without already knowing causal inference.
 - A mobile-first learning experience with compact navigation, responsive lesson layouts, and visual lesson headers.
 - Study Mode as the main path into causality basics.
-- A learning-profile switch in the top-right corner for previewing different audience tracks.
+- A visible audience switch for previewing Everyone, CS student, and Healthcare tracks.
+- Booth Mode for CHAIFest-style stand-up demos: one question, one hidden-path reveal, a causal graph, and a QR for the 3-minute phone challenge.
+- Separate expert trust and 30-second feedback pages for booth visitors.
 - Project and funding links with QR codes for VIOS Group and CHAI at the bottom of the homepage.
 
 ## Learning Paths
@@ -25,6 +27,14 @@ The lesson introduces the difference between seeing a pattern and proving a caus
 ### CS student: Directed Acyclic Graph (DAG)
 
 The second learner path currently provides the shell for a DAG-focused course. It previews the structure for learning causal graphs, including nodes, arrows, paths, and why causal graphs cannot loop.
+
+### Healthcare: The Reminder Puzzle
+
+The healthcare bridge is a short, non-diagnostic example for CHAI audiences:
+
+> Patients who received a clinic text reminder were more likely to attend their appointment, but does the reminder itself deserve the credit?
+
+It focuses on spotting patient engagement and life stability as possible hidden upstream causes, not on giving medical advice.
 
 ## Current Demo Scope
 

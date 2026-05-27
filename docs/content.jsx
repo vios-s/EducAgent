@@ -56,7 +56,7 @@ const LEARNER0_LESSONS = [
       { kind: 'graph' },
       { kind: 'p', text: "The bar chart the school published lives in the ___observational world___. Both roads are open. The gap between the bars is real, but it carries the fingerprints of prior achievement as well as tutoring." },
       { kind: 'callout', tone: 'accent', icon: 'Sparkle', title: 'So what would actually settle it?',
-        text: "That second idea — changing the rule ourselves — is what researchers call an ___intervention___, written `do(TutoringAssignment := assigned by coin flip)`. When we do that, we break the link between prior achievement and tutoring assignment." },
+        text: "That second idea is simple: change the rule ourselves. If students are assigned tutoring by a coin flip, prior achievement no longer decides who gets tutoring, so the hidden road into assignment is broken." },
       { kind: 'figure', src: 'data/learner_0/passive_courses/interventions/imgs/img_02.png', caption: "Left: observational world, where groups may already differ. Right: intervention world, where assignment is independent of prior achievement.", alt: 'Three causal cards with an observational panel and an intervention panel where the link into tutoring assignment is crossed out'},
 
       { kind: 'section', id: 's5', eyebrow: 'Section 5', title: 'Check Your Understanding' },
@@ -106,7 +106,7 @@ const LEARNER0_LESSONS = [
     sections: [
       { id: 'r1', label: 'The Coin Flip', icon: 'Sparkle' },
       { id: 'r2', label: 'A Common Mix-Up', icon: 'Compass' },
-      { id: 'r3', label: "What 'do()' Means", icon: 'Lightbulb' },
+      { id: 'r3', label: 'Changing the Rule', icon: 'Lightbulb' },
       { id: 'r4', label: 'See It Disappear', icon: 'Graph' },
       { id: 'r5', label: 'Check Yourself', icon: 'Target' },
     ],
@@ -132,7 +132,7 @@ const LEARNER0_LESSONS = [
       { kind: 'p', text: "Picture the original situation. The school uses student records to decide who gets tutoring. That means PriorAchievement is quietly steering TutoringAssignment. Students with certain backgrounds are more or less likely to be assigned — and that background ___also___ affects TestScore." },
       { kind: 'p', text: "Now picture a researcher stepping in and saying: ___'We are going to flip a coin for every student. Heads gets tutoring, tails does not.'___ The school's old rule — the one that connected prior achievement to tutoring assignment — is gone. It has been replaced." },
       { kind: 'p', text: "This replacement is what researchers call an ___intervention___: not just observing who got tutoring, but actively deciding who gets it regardless of background." },
-      { kind: 'codebox', label: 'Shorthand', code: 'do(TutoringAssignment := coin flip)' },
+      { kind: 'codebox', label: 'Plain-language rule', code: 'Replace the school rule with a coin flip.' },
       { kind: 'p', text: "After that change, the coin is the only thing determining T. Prior achievement still affects test scores directly — that link stays — but it no longer has any say in who gets tutoring. The score gap we measure now is a much cleaner picture of what tutoring itself does." },
       { kind: 'callout', tone: 'sun', icon: 'Lightbulb', title: 'Only one link changes',
         text: "PriorAchievement still influences TestScore. TutoringAssignment still influences TestScore. What disappears is the link from PriorAchievement to TutoringAssignment." },
@@ -163,7 +163,7 @@ const LEARNER0_LESSONS = [
           answer: 0,
           why: "Once the coin decides, prior achievement has no say in the assignment. Any student can land in either group.",
         },
-        { q: "Which of the following best describes what `do(TutoringAssignment := coin flip)` means in plain language?",
+        { q: "Which of the following best describes changing the tutoring assignment rule to a coin flip?",
           options: [
             "We observe which students chose to attend tutoring on their own.",
             "We filter the data to students who happened to receive tutoring.",
@@ -171,12 +171,44 @@ const LEARNER0_LESSONS = [
             "We remove the effect of tutoring from the test scores after the fact.",
           ],
           answer: 2,
-          why: "`do(...)` is shorthand for changing the rule ourselves. We are not filtering or adjusting after the fact; we are replacing the original assignment mechanism with our own.",
+          why: "The key move is changing the rule ourselves. We are not filtering or adjusting after the fact; we are replacing the original assignment mechanism with our own.",
         },
       ]},
     ],
   },
 ];
+
+const HEALTHCARE_GRAPH = {
+  title: 'Clinic reminder causal map',
+  hint: 'Healthcare attendance example',
+  interventionPrompt: 'Show coin-flip reminder assignment',
+  interventionClosedLabel: 'Coin-flip assignment shown - engagement no longer picks reminders',
+  nodes: {
+    Z: {
+      label: 'Patient\nEngagement',
+      tag: 'Z',
+      color: 'var(--plum)',
+      bg: 'var(--plum-soft)',
+    },
+    T: {
+      label: 'Received\nReminder',
+      tag: 'T',
+      color: 'var(--primary)',
+      bg: 'var(--primary-soft)',
+    },
+    Y: {
+      label: 'Attended\nAppointment',
+      tag: 'Y',
+      color: 'var(--accent)',
+      bg: 'var(--accent-soft)',
+    },
+  },
+  legend: [
+    { color: 'var(--plum)', label: 'Hidden upstream factor' },
+    { color: 'var(--primary)', label: 'Reminder assignment' },
+    { color: 'var(--accent)', label: 'Attendance outcome' },
+  ],
+};
 
 const COURSE_CONFIGS = {
   learner_0: {
@@ -187,6 +219,7 @@ const COURSE_CONFIGS = {
     courseKicker: 'Public beginner lesson',
     jsonPath: 'data/learner_0/passive_courses/interventions/content.json',
     imageBase: 'data/learner_0/passive_courses/interventions/imgs',
+    audioManifestPath: 'assets/audio/learner_0/interventions/manifest.json',
     lessons: LEARNER0_LESSONS,
   },
   learner_1: {
@@ -197,6 +230,21 @@ const COURSE_CONFIGS = {
     courseKicker: 'CS / ML beginner shell',
     jsonPath: 'data/learner_1/passive_courses/directed-acyclic-graph-dag/content.json',
     imageBase: 'data/learner_1/passive_courses/directed-acyclic-graph-dag/imgs',
+    lessons: null,
+  },
+  learner_8: {
+    learnerId: 'learner_8',
+    label: 'Healthcare',
+    profile: 'CHAI-HEALTH',
+    courseTitle: 'Clinic reminder puzzle',
+    courseKicker: 'Healthcare bridge',
+    jsonPath: 'data/learner_8/interventions/content.json',
+    imageBase: 'data/learner_8/interventions/imgs',
+    chapterPrefix: 'Healthcare',
+    sectionPrefix: 'Clinic',
+    nodeEmojis: ['🏥', '🎲'],
+    nodeColors: ['plum', 'accent'],
+    graph: HEALTHCARE_GRAPH,
     lessons: null,
   },
 };
@@ -218,8 +266,10 @@ async function loadLearnerCourse(learnerId) {
 function transformDagContent(data, config) {
   const outlineByTitle = Object.fromEntries((data.outline || []).map((o) => [o.title, o]));
   const imageLookup = buildImageLookup(data.image_refs || [], config.imageBase);
-  const nodeEmojis = ['↗', '⇄', '○', ':='];
-  const nodeColors = ['accent', 'sun', 'plum', 'accent'];
+  const nodeEmojis = config.nodeEmojis || ['↗', '⇄', '○', 'Rule'];
+  const nodeColors = config.nodeColors || ['accent', 'sun', 'plum', 'accent'];
+  const chapterPrefix = config.chapterPrefix || 'DAG';
+  const sectionPrefix = config.sectionPrefix || 'DAG';
 
   return (data.nodes || []).map((node, nodeIndex) => {
     const outline = outlineByTitle[node.node_title] || {};
@@ -240,7 +290,7 @@ function transformDagContent(data, config) {
       blocks.push({
         kind: 'section',
         id: sections[sectionIndex].id,
-        eyebrow: `DAG ${nodeIndex + 1}.${sectionIndex + 1}`,
+        eyebrow: `${sectionPrefix} ${nodeIndex + 1}.${sectionIndex + 1}`,
         title: section.section,
       });
       blocks.push(...sectionContentToBlocks(section.content || '', {
@@ -248,18 +298,19 @@ function transformDagContent(data, config) {
         sectionTitle: section.section,
         imageLookup,
         stripObjectives: sectionIndex === 0,
+        graph: config.graph,
       }));
     });
 
     return {
       id: lessonId,
-      chapter: `DAG ${nodeIndex + 1}`,
+      chapter: `${chapterPrefix} ${nodeIndex + 1}`,
       title: node.node_title,
       minutes: estimateMinutes(node),
       emoji: nodeEmojis[nodeIndex] || 'DAG',
       color: nodeColors[nodeIndex] || 'accent',
       teaserImage: teaserForLesson(lessonId, imageLookup, nodeIndex),
-      blurb: outline.summary || data.anchor_case?.scenario || 'A generated DAG learning shell.',
+      blurb: outline.summary || data.anchor_case?.scenario || 'A generated learning shell.',
       sections,
       blocks,
     };
@@ -294,12 +345,12 @@ function sectionContentToBlocks(content, ctx) {
   let marker;
 
   while ((marker = markerRe.exec(text)) !== null) {
-    pushMarkdownAndGraphs(blocks, text.slice(last, marker.index));
+    pushMarkdownAndGraphs(blocks, text.slice(last, marker.index), ctx);
     const image = ctx.imageLookup.byKey[`${ctx.nodeTitle}::${ctx.sectionTitle}`] || ctx.imageLookup.sequential[0];
     if (image) blocks.push({ kind: 'figure', ...image });
     last = marker.index + marker[0].length;
   }
-  pushMarkdownAndGraphs(blocks, text.slice(last));
+  pushMarkdownAndGraphs(blocks, text.slice(last), ctx);
   return blocks;
 }
 
@@ -319,7 +370,7 @@ function parseQuizQuestions(content) {
   const questionStarts = [];
 
   lines.forEach((line, index) => {
-    if (/^\s*\d+\.\s+/.test(line)) questionStarts.push(index);
+    if (/^\s*(?:\d+\.\s+|\*\*(?:Question|Q)\s*\d+\.?\*\*)/i.test(line)) questionStarts.push(index);
   });
 
   return questionStarts.map((start, qi) => {
@@ -342,6 +393,8 @@ function parseQuizChunk(chunk, answerInfo) {
   const rawQuestion = firstOption >= 0 ? chunk.slice(0, firstOption).trim() : chunk.trim();
   const question = rawQuestion
     .replace(/^\s*\d+\.\s*/, '')
+    .replace(/^\s*---\s*/, '')
+    .replace(/^\s*\*\*(?:Question|Q)\s*\d+\.?\*\*\s*/i, '')
     .replace(/^\*\*[^*]+?\.\*\*\s*/, '')
     .trim();
   const answerLetter = answerInfo.letter || 'A';
@@ -368,7 +421,7 @@ function parseAnswerDetails(detailsText) {
   return answers;
 }
 
-function pushMarkdownAndGraphs(blocks, rawText) {
+function pushMarkdownAndGraphs(blocks, rawText, ctx = {}) {
   const text = rawText.trim();
   if (!text) return;
 
@@ -378,10 +431,14 @@ function pushMarkdownAndGraphs(blocks, rawText) {
   while ((match = mermaidRe.exec(text)) !== null) {
     const before = text.slice(last, match.index).trim();
     if (before) blocks.push({ kind: 'markdown', text: before });
-    blocks.push({
-      kind: 'hiring-graph',
-      variant: /FORBIDDEN|Y2|same-snapshot/i.test(match[1]) ? 'cycle' : 'base',
-    });
+    if (ctx.graph) {
+      blocks.push({ kind: 'graph', graph: ctx.graph });
+    } else {
+      blocks.push({
+        kind: 'hiring-graph',
+        variant: /FORBIDDEN|Y2|same-snapshot/i.test(match[1]) ? 'cycle' : 'base',
+      });
+    }
     last = match.index + match[0].length;
   }
 
@@ -403,9 +460,23 @@ function extractObjectives(content) {
 
 function stripLeadingObjectiveQuote(content) {
   const lines = content.split(/\r?\n/);
-  let i = 0;
-  while (i < lines.length && (lines[i].startsWith('>') || lines[i].trim() === '')) i += 1;
-  return lines.slice(i).join('\n').trim();
+  const kept = [];
+  let skippingObjectives = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (/^>\s*\*\*After this mini lesson/i.test(trimmed)) {
+      skippingObjectives = true;
+      continue;
+    }
+    if (skippingObjectives) {
+      if (/^>\s?/.test(trimmed) || trimmed === '') continue;
+      skippingObjectives = false;
+    }
+    kept.push(line);
+  }
+
+  return kept.join('\n').trim();
 }
 
 function estimateMinutes(node) {

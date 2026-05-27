@@ -1,0 +1,77 @@
+[
+  {
+    "text": "left",
+    "start": 0.04,
+    "end": 0.29
+  },
+  {
+    "text": "who",
+    "start": 0.41,
+    "end": 0.53
+  },
+  {
+    "text": "happen",
+    "start": 0.53,
+    "end": 0.99
+  },
+  {
+    "text": "to",
+    "start": 0.99,
+    "end": 1.06
+  },
+  {
+    "text": "get",
+    "start": 1.14,
+    "end": 1.37
+  },
+  {
+    "text": "tutoring.",
+    "start": 1.37,
+    "end": 2.19
+  },
+  {
+    "text": "Right,",
+    "start": 2.19,
+    "end": 2.59
+  },
+  {
+    "text": "who",
+    "start": 2.59,
+    "end": 2.87
+  },
+  {
+    "text": "we",
+    "start": 2.87,
+    "end": 2.98
+  },
+  {
+    "text": "decided",
+    "start": 2.98,
+    "end": 3.44
+  },
+  {
+    "text": "to",
+    "start": 3.44,
+    "end": 3.55
+  },
+  {
+    "text": "assign",
+    "start": 3.57,
+    "end": 4
+  },
+  {
+    "text": "by",
+    "start": 4,
+    "end": 4.17
+  },
+  {
+    "text": "coin",
+    "start": 4.17,
+    "end": 4.52
+  },
+  {
+    "text": "flip.",
+    "start": 4.52,
+    "end": 4.88
+  }
+]
