@@ -2259,7 +2259,7 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner, onOp
       icon: 'Graph',
       title: 'See the hidden path',
       badge: 'coming soon',
-      text: 'Booth Mode now turns the hidden causal path into a quick reveal: choose an answer, open the graph, then continue into the full lesson.',
+      text: 'A concept graph tracks prerequisites and dependencies, so the tutor can backtrack to the idea that unlocks the current lesson.',
     },
     {
       icon: 'Sparkle',
