@@ -816,6 +816,8 @@ function cleanInline(text) {
     .replace(/<\/?strong>/g, '**')
     .replace(/<\/?em>/g, '*')
     .replace(/\$([^$]+)\$/g, '`$1`')
+    .replace(/\u000dightarrow/g, '->')
+    .replace(/\u0009o/g, '->')
     .replace(/\\rightarrow/g, '->')
     .replace(/\\to/g, '->')
     .replace(/\\mathrm\{([^}]+)\}/g, '$1')
@@ -1203,7 +1205,7 @@ function LessonView({ lesson, course, lessonIndex, totalLessons, onPrev, onNext,
             case 'graph':      return <GraphBlock key={i} initialIntervention={b.intervention} graph={b.graph}/>;
             case 'hiring-graph': return <HiringDagGraph key={i} variant={b.variant}/>;
             case 'markdown':   return <MarkdownBlock key={i} text={b.text}/>;
-            case 'quiz':       return <div key={i} style={{ margin: '24px 0' }}><InteractiveQuiz questions={b.questions}/></div>;
+            case 'quiz':       return <div key={i} style={{ margin: '24px 0' }}><InteractiveQuiz key={`${lesson.id}-${i}`} questions={b.questions}/></div>;
             default: return null;
           }
         })}
@@ -1239,7 +1241,7 @@ function LessonHero({ lesson, course, lessonIndex, totalLessons }) {
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 820 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
           <Chip>{course?.label || 'learner'}</Chip>
-          <Chip>{lesson.chapter}</Chip>
+          <Chip>{`Lesson ${lessonIndex + 1}`}</Chip>
           <Chip muted><Icon.Sparkle size={12}/> {lesson.minutes} min read</Chip>
           <Chip muted>{course?.courseTitle || 'Course'}</Chip>
         </div>
@@ -1568,7 +1570,7 @@ const AUDIENCE_OPTIONS = [
   },
   {
     id: 'learner_1',
-    label: 'CS student',
+    label: 'Computer science',
     description: 'DAG example for ML and computing audiences',
   },
   {
@@ -1606,15 +1608,15 @@ const BOOTH_SCENARIOS = {
     },
   },
   learner_1: {
-    label: 'CS student',
+    label: 'Computer science',
     kicker: 'Causal graph teaser',
-    prompt: 'A hiring model recommends applicants with stronger skill signals. What hidden path should a DAG make visible?',
+    prompt: 'A hiring model recommends applicants with stronger skill signals. What hidden path should the graph make visible?',
     options: [
       'Skill signals alone explain every recommendation.',
-      'University prestige may shape both skill signals and the recommendation.',
       'Directed arrows only mean two variables are correlated.',
+      'University prestige may shape both skill signals and the recommendation.',
     ],
-    answer: 1,
+    answer: 2,
     hiddenTitle: 'Hidden path: background signal into both sides',
     hiddenText: 'A DAG forces us to say whether UniversityPrestige sits upstream of both TechnicalSkill and HiringRecommendation. That matters before we claim what the model causally depends on.',
     graph: {
@@ -1632,11 +1634,11 @@ const BOOTH_SCENARIOS = {
     kicker: 'CHAI bridge',
     prompt: 'Text reminders linked to higher attendance. What else might explain it?',
     options: [
-      'The reminder must have caused the attendance gap.',
       'Patients getting reminders may already be more engaged or easier to reach.',
+      'The reminder must have caused the attendance gap.',
       'Observational healthcare data is never useful.',
     ],
-    answer: 1,
+    answer: 0,
     hiddenTitle: 'Hidden cause: patient engagement',
     hiddenText: 'Engaged, digitally connected, life-stable patients may be more likely to receive reminders and more likely to attend anyway. This is causal reasoning, not medical advice.',
     graph: {
@@ -2013,9 +2015,9 @@ function BoothCausalGraph({ scenario, revealed }) {
             <path d="M0,0 L10,5 L0,10 z" fill={hiddenStroke}/>
           </marker>
         </defs>
-        <line x1="210" y1="90" x2="305" y2="132" stroke="var(--primary)" strokeWidth="4" markerEnd="url(#booth-arr-main)"/>
-        <line x1="126" y1="122" x2="174" y2="88" stroke={hiddenStroke} strokeWidth="4" strokeDasharray={revealed ? 'none' : '7 7'} opacity={hiddenOpacity} markerEnd="url(#booth-arr-hidden)"/>
-        <line x1="126" y1="140" x2="306" y2="154" stroke={hiddenStroke} strokeWidth="4" strokeDasharray={revealed ? 'none' : '7 7'} opacity={hiddenOpacity} markerEnd="url(#booth-arr-hidden)"/>
+        <line x1="254" y1="98" x2="300" y2="124" stroke="var(--primary)" strokeWidth="4" markerEnd="url(#booth-arr-main)"/>
+        <line x1="131" y1="111" x2="157" y2="97" stroke={hiddenStroke} strokeWidth="4" strokeDasharray={revealed ? 'none' : '7 7'} opacity={hiddenOpacity} markerEnd="url(#booth-arr-hidden)"/>
+        <line x1="137" y1="139" x2="293" y2="147" stroke={hiddenStroke} strokeWidth="4" strokeDasharray={revealed ? 'none' : '7 7'} opacity={hiddenOpacity} markerEnd="url(#booth-arr-hidden)"/>
         {renderNode(z, 82, 136, true)}
         {renderNode(t, 206, 72, false)}
         {renderNode(y, 348, 150, false)}
@@ -2246,7 +2248,7 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner, onOp
     {
       icon: 'Book',
       title: 'Start with a story',
-      text: 'Every lesson begins with something familiar: patterns that fits your background and people already notice.',
+      text: 'Every lesson starts with a pattern people already recognize, then turns it into a causal question.',
     },
     {
       icon: 'Target',
@@ -2256,6 +2258,7 @@ function HomePage({ currentCourse, selectedLearner, onStart, onPickLearner, onOp
     {
       icon: 'Graph',
       title: 'See the hidden path',
+      badge: 'coming soon',
       text: 'Booth Mode now turns the hidden causal path into a quick reveal: choose an answer, open the graph, then continue into the full lesson.',
     },
     {
@@ -2840,12 +2843,27 @@ function viewFromHash(hash) {
   return 'home';
 }
 
+function MobileBackToTop({ visible, onClick }) {
+  return (
+    <button
+      className={`mobile-back-to-top${visible ? ' is-visible' : ''}`}
+      onClick={onClick}
+      aria-label="Return to top"
+      title="Return to top"
+    >
+      <span aria-hidden="true">↑</span>
+      <span>Top</span>
+    </button>
+  );
+}
+
 function App() {
   const initialHash = window.location.hash;
   const [selectedLearner, setSelectedLearner] = useS('learner_0');
   const [view, setView] = useS(viewFromHash(initialHash));
   const audioPlayer = useAudioPlayer();
   const [audioManifest, setAudioManifest] = useS(null);
+  const [showBackToTop, setShowBackToTop] = useS(false);
   const [courseState, setCourseState] = useS({
     status: 'loading',
     config: COURSE_CONFIGS.learner_0,
@@ -2957,6 +2975,17 @@ function App() {
     });
   }, [view]);
 
+  useE(() => {
+    if (view !== 'lesson') {
+      setShowBackToTop(false);
+      return;
+    }
+    const onScroll = () => setShowBackToTop(window.scrollY > 520);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [view]);
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <TopBar
@@ -2966,6 +2995,7 @@ function App() {
         onPickLearner={setSelectedLearner}
         onGoHome={goHome}
         loading={courseState.status === 'loading'}
+        hideAudienceSwitch={view === 'booth'}
       />
 
       <main style={{
@@ -3026,6 +3056,10 @@ function App() {
           />
         )}
       </main>
+      <MobileBackToTop
+        visible={view === 'lesson' && showBackToTop}
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      />
     </div>
   );
 }

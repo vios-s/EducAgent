@@ -282,6 +282,94 @@
     white-space: nowrap;
   }
 
+  .mobile-back-to-top {
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    z-index: 60;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    min-height: 42px;
+    padding: 10px 13px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.22);
+    box-shadow: 0 14px 32px rgba(42,31,20,0.22);
+    font-weight: 900;
+    font-size: 13px;
+  }
+
+  @media (max-width: 900px) {
+    .quiz-footer {
+      display: grid !important;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: stretch !important;
+      gap: 10px !important;
+      padding: 14px 16px 18px !important;
+    }
+    .quiz-footer-status {
+      grid-column: 1 / -1;
+      order: -1;
+      min-width: 0;
+      padding: 0 8px;
+      text-align: center !important;
+      line-height: 1.35;
+      white-space: normal;
+    }
+    .quiz-footer-button {
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 46px;
+      justify-content: center !important;
+      text-align: center;
+      white-space: normal;
+      line-height: 1.15;
+    }
+  }
+
+  @media (max-width: 980px), (max-height: 760px) {
+    #booth {
+      height: auto !important;
+      min-height: calc(100vh - 64px) !important;
+      place-items: start stretch !important;
+      align-items: start !important;
+    }
+    .booth-shell-card {
+      height: auto !important;
+      min-height: 0 !important;
+      overflow: visible !important;
+    }
+    .booth-challenge-panel {
+      overflow: visible !important;
+      grid-template-rows: auto auto !important;
+    }
+  }
+
+  @media (max-width: 980px) {
+    .booth-header,
+    .booth-grid,
+    .booth-bottom-rail {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+    .booth-header-tabs {
+      width: 100%;
+    }
+  }
+
+  @media (max-height: 760px) and (min-width: 981px) {
+    .booth-shell-card {
+      grid-template-rows: auto auto auto !important;
+    }
+    .booth-grid {
+      grid-template-columns: minmax(390px, 1.05fr) minmax(360px, 0.95fr) !important;
+    }
+    .booth-bottom-rail {
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.38fr) !important;
+    }
+  }
+
   @media (max-width: 720px) {
     body { font-size: 15px; }
 
@@ -329,6 +417,9 @@
     }
     .lesson-audio-guide-meta {
       display: none;
+    }
+    .mobile-back-to-top.is-visible {
+      display: inline-flex;
     }
 
     .home-hero {

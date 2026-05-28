@@ -261,7 +261,7 @@ const COURSE_CONFIGS = {
   },
   learner_1: {
     learnerId: 'learner_1',
-    label: 'CS student',
+    label: 'Computer science',
     profile: 'CS-ML-BEG',
     courseTitle: 'Directed Acyclic Graph (DAG)',
     courseKicker: 'CS / ML beginner shell',
@@ -365,15 +365,29 @@ function buildImageLookup(imageRefs, imageBase) {
   const lookup = { byKey: {}, sequential: [] };
   imageRefs.forEach((ref, index) => {
     const src = `${imageBase}/img_${String(index).padStart(2, '0')}.png`;
+    const caption = visibleImageCaption(ref);
     const item = {
       src,
-      alt: ref.description || ref.section || 'Course image',
-      caption: ref.description || ref.section || '',
+      alt: imageAltText(ref),
+      caption,
     };
     lookup.byKey[`${ref.node_title}::${ref.section}`] = item;
     lookup.sequential.push(item);
   });
   return lookup;
+}
+
+function visibleImageCaption(ref) {
+  const description = String(ref?.description || '').trim();
+  if (!description) return '';
+  if (/^(Layout|Style|Scene|Prompt)\s*:/i.test(description)) return '';
+  return description;
+}
+
+function imageAltText(ref) {
+  const description = String(ref?.description || '').trim();
+  if (description && !/^(Layout|Style|Scene|Prompt)\s*:/i.test(description)) return description;
+  return ref?.section ? `Illustration for ${ref.section}` : 'Course illustration';
 }
 
 function imageBlockForSection(ctx) {

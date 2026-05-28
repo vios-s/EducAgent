@@ -294,7 +294,7 @@
         },
         {
           "section": "Before We Dive In",
-          "content": "> You might be thinking: \"Cycles in graphs are totally normal — recurrent neural networks and feedback controllers use them all the time, so what's the problem?\" That intuition makes sense for dynamic systems that unfold over time. But a causal DAG is a <em>static snapshot</em> of one moment — it asks \"what caused what in this round?\" not \"what happens after many rounds?\" In a single snapshot, if A causes B and B causes A simultaneously, there is no starting point for the causal story, and the model breaks down. That is the trap this node is here to catch.",
+          "content": "> You might be thinking: \"Cycles in graphs are totally normal — recurrent neural networks and feedback controllers use them all the time, so what's the problem?\" That intuition makes sense for dynamic systems that unfold over time. The hiring-pipeline DAG in this lesson is a <em>single-time-slice model</em>: it asks \"what caused what in this round?\" If feedback happens across rounds, a temporal DAG can represent it by separating time points, such as $A_t \\rightarrow B_t \\rightarrow A_{t+1}$. The problem appears when we draw A causes B and B causes A inside the same snapshot, because then the causal ordering is undefined. That is the trap this node is here to catch.",
           "markers": [],
           "part": "recall"
         },

@@ -1,13 +1,23 @@
 // Interactive quiz component
-const { useState: useStateQ } = React;
+const { useEffect: useEffectQ, useMemo: useMemoQ, useState: useStateQ } = React;
 
-function InteractiveQuiz({ questions }) {
+function InteractiveQuiz({ questions = [] }) {
+  const displayQuestions = useMemoQ(() => rebalanceQuizQuestions(questions), [questions]);
   const [picks, setPicks] = useStateQ({});
   const [revealed, setRevealed] = useStateQ({});
   const [current, setCurrent] = useStateQ(0);
 
-  const allAnswered = questions.every((_, i) => revealed[i]);
-  const correctCount = questions.filter((q, i) => revealed[i] && picks[i] === q.answer).length;
+  const quizSignature = displayQuestions.map((q) => `${q.q}::${q.options.join('|')}`).join('||');
+  useEffectQ(() => {
+    setPicks({});
+    setRevealed({});
+    setCurrent(0);
+  }, [quizSignature]);
+
+  if (!displayQuestions.length) return null;
+  const activeCurrent = Math.min(current, displayQuestions.length - 1);
+  const allAnswered = displayQuestions.every((_, i) => revealed[i]);
+  const correctCount = displayQuestions.filter((q, i) => revealed[i] && picks[i] === q.answer).length;
 
   const pick = (qi, oi) => {
     if (revealed[qi]) return;
@@ -17,7 +27,7 @@ function InteractiveQuiz({ questions }) {
     if (picks[qi] === undefined) return;
     setRevealed(r => ({ ...r, [qi]: true }));
   };
-  const next = () => setCurrent(c => Math.min(c + 1, questions.length - 1));
+  const next = () => setCurrent(c => Math.min(c + 1, displayQuestions.length - 1));
   const prev = () => setCurrent(c => Math.max(c - 1, 0));
   const reset = () => { setPicks({}); setRevealed({}); setCurrent(0); };
 
@@ -47,18 +57,18 @@ function InteractiveQuiz({ questions }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 12, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 800 }}>Check your understanding</div>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em' }}>
-            Question {current + 1} <span style={{ color: 'var(--ink-mute)', fontWeight: 600 }}>of {questions.length}</span>
+            Question {activeCurrent + 1} <span style={{ color: 'var(--ink-mute)', fontWeight: 600 }}>of {displayQuestions.length}</span>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          {questions.map((_, i) => {
+          {displayQuestions.map((_, i) => {
             const r = revealed[i];
-            const correct = r && picks[i] === questions[i].answer;
-            const bg = r ? (correct ? 'var(--ok)' : 'var(--err)') : (i === current ? 'var(--accent)' : 'var(--line)');
+            const correct = r && picks[i] === displayQuestions[i].answer;
+            const bg = r ? (correct ? 'var(--ok)' : 'var(--err)') : (i === activeCurrent ? 'var(--accent)' : 'var(--line)');
             return (
               <button key={i} aria-label={`Go to question ${i+1}`} onClick={() => setCurrent(i)} style={{
                 width: 24, height: 8, borderRadius: 6, background: bg,
-                opacity: i === current ? 1 : 0.7, transition: 'all .15s',
+                opacity: i === activeCurrent ? 1 : 0.7, transition: 'all .15s',
               }}/>
             );
           })}
@@ -68,57 +78,57 @@ function InteractiveQuiz({ questions }) {
       {/* Body */}
       <div style={{ padding: '24px 28px 8px' }}>
         <QuizQuestion
-          q={questions[current]}
-          qi={current}
-          pick={picks[current]}
-          revealed={!!revealed[current]}
-          onPick={(oi) => pick(current, oi)}
+          q={displayQuestions[activeCurrent]}
+          qi={activeCurrent}
+          pick={picks[activeCurrent]}
+          revealed={!!revealed[activeCurrent]}
+          onPick={(oi) => pick(activeCurrent, oi)}
         />
       </div>
 
       {/* Footer */}
-      <div style={{
+      <div className="quiz-footer" style={{
         padding: '16px 24px 20px',
         display: 'flex', alignItems: 'center', gap: 12,
         borderTop: '1px solid var(--line-soft)',
         background: 'var(--surface)',
       }}>
-        <button onClick={prev} disabled={current === 0} style={{
+        <button className="quiz-footer-button quiz-footer-prev" onClick={prev} disabled={activeCurrent === 0} style={{
           padding: '10px 14px', borderRadius: 12, fontWeight: 600, fontSize: 14,
-          background: 'transparent', color: current === 0 ? 'var(--ink-mute)' : 'var(--ink-soft)',
-          opacity: current === 0 ? 0.5 : 1, cursor: current === 0 ? 'default' : 'pointer',
+          background: 'transparent', color: activeCurrent === 0 ? 'var(--ink-mute)' : 'var(--ink-soft)',
+          opacity: activeCurrent === 0 ? 0.5 : 1, cursor: activeCurrent === 0 ? 'default' : 'pointer',
           display: 'flex', alignItems: 'center', gap: 6,
         }}>
           <Icon.ChevL size={16}/> Previous
         </button>
-        <div style={{ flex: 1, fontSize: 13, color: 'var(--ink-mute)', textAlign: 'center' }}>
+        <div className="quiz-footer-status" style={{ flex: 1, fontSize: 13, color: 'var(--ink-mute)', textAlign: 'center' }}>
           {allAnswered ? (
             <span style={{ color: 'var(--ink)', fontWeight: 600 }}>
-              {correctCount} / {questions.length} correct {correctCount === questions.length ? '🎉' : '— review and try again'}
+              {correctCount} / {displayQuestions.length} correct {correctCount === displayQuestions.length ? '🎉' : '— review and try again'}
             </span>
-          ) : revealed[current] ? (
-            picks[current] === questions[current].answer ? '✓ Nice — keep going.' : 'Read the explanation, then move on.'
+          ) : revealed[activeCurrent] ? (
+            picks[activeCurrent] === displayQuestions[activeCurrent].answer ? '✓ Nice — keep going.' : 'Read the explanation, then move on.'
           ) : (
             'Pick an answer to check it.'
           )}
         </div>
-        {!revealed[current] ? (
-          <button onClick={() => submit(current)} disabled={picks[current] === undefined} style={{
+        {!revealed[activeCurrent] ? (
+          <button className="quiz-footer-button quiz-footer-primary" onClick={() => submit(activeCurrent)} disabled={picks[activeCurrent] === undefined} style={{
             padding: '10px 18px', borderRadius: 12, fontWeight: 700, fontSize: 14,
-            background: picks[current] === undefined ? 'var(--line)' : 'var(--primary)',
-            color: picks[current] === undefined ? 'var(--ink-mute)' : '#fff',
-            cursor: picks[current] === undefined ? 'default' : 'pointer',
-            boxShadow: picks[current] !== undefined ? '0 4px 12px rgba(232,93,44,0.25)' : 'none',
+            background: picks[activeCurrent] === undefined ? 'var(--line)' : 'var(--primary)',
+            color: picks[activeCurrent] === undefined ? 'var(--ink-mute)' : '#fff',
+            cursor: picks[activeCurrent] === undefined ? 'default' : 'pointer',
+            boxShadow: picks[activeCurrent] !== undefined ? '0 4px 12px rgba(232,93,44,0.25)' : 'none',
             transition: 'all .15s',
           }}>Check answer</button>
-        ) : current < questions.length - 1 ? (
-          <button onClick={next} style={{
+        ) : activeCurrent < displayQuestions.length - 1 ? (
+          <button className="quiz-footer-button quiz-footer-primary" onClick={next} style={{
             padding: '10px 18px', borderRadius: 12, fontWeight: 700, fontSize: 14,
             background: 'var(--ink)', color: '#fff',
             display: 'flex', alignItems: 'center', gap: 6,
           }}>Next <Icon.ChevR size={16}/></button>
         ) : (
-          <button onClick={reset} style={{
+          <button className="quiz-footer-button quiz-footer-primary" onClick={reset} style={{
             padding: '10px 18px', borderRadius: 12, fontWeight: 700, fontSize: 14,
             background: 'var(--accent)', color: '#fff',
           }}>Try again</button>
@@ -126,6 +136,42 @@ function InteractiveQuiz({ questions }) {
       </div>
     </div>
   );
+}
+
+function rebalanceQuizQuestions(questions) {
+  return questions.map((q, index) => {
+    const options = Array.isArray(q.options) ? q.options : [];
+    if (!options.length) return q;
+    const answer = Math.max(0, Math.min(options.length - 1, Number(q.answer) || 0));
+    const target = stableQuizAnswerIndex(q, index, options.length);
+    const order = options.map((_, i) => i).filter((i) => i !== answer);
+    order.splice(target, 0, answer);
+    return {
+      ...q,
+      options: order.map((i) => options[i]),
+      answer: target,
+      why: cleanQuizExplanation(q.why),
+    };
+  });
+}
+
+function stableQuizAnswerIndex(q, index, optionCount) {
+  const correctText = q.options?.[q.answer] || '';
+  return hashQuizString(`${index}:${q.q}:${correctText}`) % optionCount;
+}
+
+function hashQuizString(value) {
+  let hash = 0;
+  for (let i = 0; i < String(value).length; i += 1) {
+    hash = ((hash << 5) - hash + String(value).charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function cleanQuizExplanation(text) {
+  return String(text || '')
+    .replace(/Options?\s+[A-D](?:,\s*[A-D])*(?:,\s*and\s*[A-D])?\s+/gi, 'The other choices ')
+    .replace(/Option\s+[A-D]\s+/gi, 'That distractor ');
 }
 
 function QuizQuestion({ q, qi, pick, revealed, onPick }) {

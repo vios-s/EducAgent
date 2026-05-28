@@ -28,6 +28,8 @@ function FormattedText({ text }) {
 
 function formatMathish(text) {
   return String(text || '')
+    .replace(/\u000dightarrow/g, '->')
+    .replace(/\u0009o/g, '->')
     .replace(/\\rightarrow/g, '->')
     .replace(/\\to/g, '->')
     .replace(/\\mathrm\{([^}]+)\}/g, '$1')
@@ -220,7 +222,7 @@ function NavItem({ item, active, collapsed, onClick }) {
 }
 
 // ---------- Top bar ----------
-function TopBar({ course, selectedLearner, onPickLearner, audienceOptions = [], onGoHome, loading }) {
+function TopBar({ course, selectedLearner, onPickLearner, audienceOptions = [], onGoHome, loading, hideAudienceSwitch = false }) {
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 20,
@@ -253,24 +255,26 @@ function TopBar({ course, selectedLearner, onPickLearner, audienceOptions = [], 
           </div>
         </button>
         <div style={{ flex: 1 }}/>
-        <div className="audience-segment" role="tablist" aria-label="Choose learning path">
-          {audienceOptions.map((option) => {
-            const active = option.id === selectedLearner;
-            return (
-              <button
-                key={option.id}
-                className={`audience-segment-button${active ? ' is-active' : ''}`}
-                role="tab"
-                aria-selected={active}
-                disabled={loading && !active}
-                onClick={() => onPickLearner(option.id)}
-                title={option.description}
-              >
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
+        {!hideAudienceSwitch && (
+          <div className="audience-segment" role="tablist" aria-label="Choose learning path">
+            {audienceOptions.map((option) => {
+              const active = option.id === selectedLearner;
+              return (
+                <button
+                  key={option.id}
+                  className={`audience-segment-button${active ? ' is-active' : ''}`}
+                  role="tab"
+                  aria-selected={active}
+                  disabled={loading && !active}
+                  onClick={() => onPickLearner(option.id)}
+                  title={option.description}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </header>
   );
