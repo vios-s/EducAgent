@@ -218,7 +218,8 @@ function Paragraph({ text, audioEntry, audioPlayer, audioQueue }) {
   );
 }
 
-function ObjectivesBlock({ title, items, audioItems = [], audioPlayer, audioQueue }) {
+function ObjectivesBlock({ title, items, tone = 'sun', audioItems = [], audioPlayer, audioQueue }) {
+  const t = toneStyle(tone);
   return (
     <div style={{
       background: 'var(--surface)',
@@ -232,12 +233,12 @@ function ObjectivesBlock({ title, items, audioItems = [], audioPlayer, audioQueu
     }}>
       <div style={{
         position: 'absolute', top: 0, left: 0, bottom: 0, width: 6,
-        background: 'linear-gradient(180deg, var(--sun), var(--primary))',
+        background: `linear-gradient(180deg, ${t.dot}, ${t.ink})`,
       }}/>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
         <div style={{
           width: 32, height: 32, borderRadius: 10,
-          background: 'var(--sun-soft)', color: 'var(--primary)',
+          background: t.bg, color: t.ink,
           display: 'grid', placeItems: 'center', flexShrink: 0,
         }}><Icon.Target size={18}/></div>
         <div style={{ minWidth: 0 }}>
@@ -251,7 +252,7 @@ function ObjectivesBlock({ title, items, audioItems = [], audioPlayer, audioQueu
             <span style={{
               flexShrink: 0, marginTop: 7,
               width: 6, height: 6, borderRadius: 999,
-              background: 'var(--primary)',
+              background: t.ink,
             }}/>
             <span style={{ flex: 1, minWidth: 0 }}><FormattedText text={item}/></span>
             <AudioButton entry={audioItems[i]} player={audioPlayer} queue={audioQueue} label="Listen to this learning goal" size={28}/>
@@ -301,7 +302,7 @@ function Figure({ src, caption, alt, audioEntry, audioPlayer, audioQueue }) {
           display: 'flex', alignItems: 'flex-start', gap: 8,
         }}>
           <Icon.Sparkle size={14} style={{ color: 'var(--primary)', marginTop: 3, flexShrink: 0 }}/>
-          <span style={{ flex: 1, minWidth: 0 }}>{caption}</span>
+          <span style={{ flex: 1, minWidth: 0 }}><FormattedText text={caption}/></span>
           <AudioButton entry={audioEntry} player={audioPlayer} queue={audioQueue} label="Listen to this image caption" size={28}/>
         </figcaption>
       )}
@@ -314,6 +315,7 @@ function CalloutBlock({ tone, icon, title, text, audioEntry, audioPlayer, audioQ
     sun:     { bg: 'var(--sun-soft)',    bar: 'var(--sun)',     ic: 'var(--primary)' },
     accent:  { bg: 'var(--accent-soft)', bar: 'var(--accent)',  ic: 'var(--accent)' },
     primary: { bg: 'var(--primary-soft)',bar: 'var(--primary)', ic: 'var(--primary)' },
+    plum:    { bg: 'var(--plum-soft)',   bar: 'var(--plum)',    ic: 'var(--plum)' },
     err:     { bg: 'var(--err-soft)',    bar: 'var(--err)',     ic: 'var(--err)' },
   };
   const t = toneMap[tone] || toneMap.sun;
@@ -387,12 +389,16 @@ function VariableCards({ items, audioEntries = [], audioPlayer, audioQueue }) {
               marginBottom: 10,
               letterSpacing: '-0.02em',
             }}>{it.tag}</div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16.5, letterSpacing: '-0.01em' }}>{it.label}</div>
-            <div style={{ fontSize: 13.5, color: 'var(--ink-soft)', marginTop: 4, lineHeight: 1.5 }}>{it.desc}</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16.5, letterSpacing: '-0.01em' }}>
+              <FormattedText text={it.label}/>
+            </div>
+            <div style={{ fontSize: 13.5, color: 'var(--ink-soft)', marginTop: 4, lineHeight: 1.5 }}>
+              <FormattedText text={it.desc}/>
+            </div>
             <div style={{
-              position: 'absolute', right: -16, bottom: -16,
-              width: 70, height: 70, borderRadius: '50%',
-              background: c.bg, opacity: 0.6,
+              position: 'absolute', right: 12, bottom: 12,
+              width: 48, height: 48, borderRadius: '50%',
+              background: c.bg, opacity: 0.38,
             }}/>
           </div>
         );
@@ -437,11 +443,15 @@ function RoadsBlock({ roads, audioEntries = [], audioPlayer, audioQueue }) {
             }}>
               {r.hopeful ? <Icon.Trophy size={18}/> : <Icon.Question size={18}/>}
             </div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>{i+1}. {r.label}</div>
-            <div style={{ fontSize: 14.5, color: 'var(--ink-soft)', lineHeight: 1.55, paddingRight: audioEntries[i]?.main ? 32 : 0 }}>{r.desc}</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
+              {i+1}. <FormattedText text={r.label}/>
+            </div>
+            <div style={{ fontSize: 14.5, color: 'var(--ink-soft)', lineHeight: 1.55, paddingRight: audioEntries[i]?.main ? 32 : 0 }}>
+              <FormattedText text={r.desc}/>
+            </div>
             <div {...audioTargetProps(audioEntries[i]?.note)} style={{ marginTop: 12, fontSize: 12, color: 'var(--ink-mute)', fontStyle: 'italic', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
               <span style={{ flex: 1, minWidth: 0 }}>
-                {r.note || (r.hopeful ? '✨ This is what we hope is true.' : '⚠ This is the hidden alternative.')}
+                <FormattedText text={r.note || (r.hopeful ? 'This is what we hope is true.' : 'This is the hidden alternative.')}/>
               </span>
               <AudioButton entry={audioEntries[i]?.note} player={audioPlayer} queue={audioQueue} label="Listen to this note" size={26}/>
             </div>
@@ -478,31 +488,53 @@ function CodeBox({ label, code }) {
   );
 }
 
-function MarkdownBlock({ text }) {
+function toneStyle(tone) {
+  const toneMap = {
+    sun:     { bg: 'var(--sun-soft)',     ink: 'var(--primary)', dot: 'var(--sun)',     border: 'var(--sun)' },
+    plum:    { bg: 'var(--plum-soft)',    ink: 'var(--plum)',    dot: 'var(--plum)',    border: 'var(--plum)' },
+    primary: { bg: 'var(--primary-soft)', ink: 'var(--primary)', dot: 'var(--primary)', border: 'var(--primary)' },
+    accent:  { bg: 'var(--accent-soft)',  ink: 'var(--accent)',  dot: 'var(--accent)',  border: 'var(--accent)' },
+    err:     { bg: 'var(--err-soft)',     ink: 'var(--err)',     dot: 'var(--err)',     border: 'var(--err)' },
+  };
+  return toneMap[tone] || toneMap.sun;
+}
+
+function conceptToneSequence(baseTone) {
+  const sequence = baseTone === 'plum'
+    ? ['plum', 'primary', 'accent', 'sun']
+    : baseTone === 'accent'
+      ? ['accent', 'primary', 'plum', 'sun']
+      : ['sun', 'primary', 'accent', 'plum'];
+  return sequence.map(toneStyle);
+}
+
+function MarkdownBlock({ text, tone = 'sun' }) {
   const parts = useM(() => parseMarkdownBlocks(text), [text]);
   return (
-    <div style={{ maxWidth: '72ch', margin: '0 0 18px' }}>
-      {parts.map((part, i) => renderMarkdownPart(part, i))}
+    <div style={{ maxWidth: '64ch', margin: '0 0 18px' }}>
+      {parts.map((part, i) => renderMarkdownPart(part, i, tone))}
     </div>
   );
 }
 
-function renderMarkdownPart(part, key) {
+function renderMarkdownPart(part, key, tone = 'sun') {
+  const t = toneStyle(tone);
   if (part.type === 'heading') {
     const Tag = part.level === 3 ? 'h3' : 'h4';
     return (
       <Tag key={key} style={{
         fontFamily: 'var(--font-display)',
-        fontSize: part.level === 3 ? 24 : 19,
+        fontSize: part.level === 3 ? 23 : 18,
         lineHeight: 1.2,
         margin: '24px 0 10px',
+        color: 'var(--ink)',
       }}>
         <FormattedText text={cleanInline(part.text)}/>
       </Tag>
     );
   }
   if (part.type === 'quote') {
-    return <CalloutBlock key={key} tone="accent" icon="Lightbulb" title="Key note" text={cleanInline(part.text)}/>;
+    return <CalloutBlock key={key} tone={tone} icon="Lightbulb" title="Key note" text={cleanInline(part.text)}/>;
   }
   if (part.type === 'p') {
     const highlight = parseHighlightParagraph(part.text);
@@ -521,7 +553,7 @@ function renderMarkdownPart(part, key) {
   if (part.type === 'ul' || part.type === 'ol' || part.type === 'alpha') {
     const concepts = parseConceptItems(part.items);
     if (concepts.length >= 2 && concepts.length === part.items.length) {
-      return <MarkdownConceptCards key={key} items={concepts}/>;
+      return <MarkdownConceptCards key={key} items={concepts} tone={tone}/>;
     }
     const ordered = part.type === 'ol';
     const Tag = ordered ? 'ol' : 'ul';
@@ -542,27 +574,39 @@ function renderMarkdownPart(part, key) {
     );
   }
   if (part.type === 'table') {
+    const variableCards = parseVariableTable(part, tone);
+    if (variableCards) {
+      return <VariableCards key={key} items={variableCards}/>;
+    }
+
     return (
-      <div key={key} style={{ overflowX: 'auto', margin: '16px 0 22px' }}>
+      <div key={key} style={{
+        overflowX: 'auto',
+        margin: '16px 0 24px',
+        borderRadius: 'var(--radius-lg)',
+        boxShadow: 'var(--shadow-sm)',
+      }}>
         <table style={{
           width: '100%',
           borderCollapse: 'separate',
           borderSpacing: 0,
           background: 'var(--surface)',
           border: '1px solid var(--line)',
-          borderRadius: 'var(--radius)',
+          borderRadius: 'var(--radius-lg)',
           overflow: 'hidden',
-          fontSize: 14,
+          fontSize: 14.5,
         }}>
           <thead>
             <tr>
               {part.header.map((cell, i) => (
                 <th key={i} style={{
                   textAlign: 'left',
-                  padding: '10px 12px',
-                  background: 'var(--bg-soft)',
+                  padding: '12px 14px',
+                  background: t.bg,
                   borderBottom: '1px solid var(--line)',
-                  color: 'var(--ink)',
+                  color: t.ink,
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 700,
                 }}><FormattedText text={cleanInline(cell)}/></th>
               ))}
             </tr>
@@ -572,10 +616,11 @@ function renderMarkdownPart(part, key) {
               <tr key={ri}>
                 {row.map((cell, ci) => (
                   <td key={ci} style={{
-                    padding: '10px 12px',
+                    padding: '12px 14px',
                     borderBottom: ri === part.rows.length - 1 ? 'none' : '1px solid var(--line-soft)',
                     color: 'var(--ink-soft)',
                     verticalAlign: 'top',
+                    lineHeight: 1.55,
                   }}><FormattedText text={cleanInline(cell)}/></td>
                 ))}
               </tr>
@@ -591,14 +636,20 @@ function renderMarkdownPart(part, key) {
         margin: '16px 0 22px',
         background: 'var(--surface)',
         border: '1px solid var(--line)',
-        borderRadius: 'var(--radius)',
-        padding: '12px 16px',
+        borderRadius: 'var(--radius-lg)',
+        padding: '14px 18px',
+        boxShadow: 'var(--shadow-sm)',
       }}>
-        <summary style={{ cursor: 'pointer', fontWeight: 700, color: 'var(--primary)' }}>
+        <summary style={{
+          cursor: 'pointer',
+          fontFamily: 'var(--font-display)',
+          fontWeight: 700,
+          color: t.ink,
+        }}>
           {part.summary}
         </summary>
         <div style={{ paddingTop: 12 }}>
-          <MarkdownBlock text={part.text}/>
+          <MarkdownBlock text={part.text} tone={tone}/>
         </div>
       </details>
     );
@@ -611,6 +662,47 @@ function renderMarkdownPart(part, key) {
     );
   }
   return <Paragraph key={key} text={cleanInline(part.text)}/>;
+}
+
+function plainInlineText(text) {
+  return String(text || '')
+    .replace(/\$([^$]+)\$/g, '$1')
+    .replace(/\*\*/g, '')
+    .replace(/`/g, '')
+    .replace(/<[^>]+>/g, '')
+    .trim();
+}
+
+function colorForVariableTag(tag, fallbackTone) {
+  const normalized = String(tag || '').trim().toUpperCase();
+  const colorMap = {
+    Z: 'sun',
+    T: 'primary',
+    X: 'primary',
+    M: 'plum',
+    Y: 'accent',
+  };
+  return colorMap[normalized] || fallbackTone || 'primary';
+}
+
+function parseVariableTable(part, tone) {
+  const headers = part.header.map((cell) => plainInlineText(cell).toLowerCase());
+  const nodeIndex = headers.findIndex((cell) => /^(node|variable)$/.test(cell));
+  const meaningIndex = headers.findIndex((cell) => /meaning|description|plain-english/.test(cell));
+  const letterIndex = headers.findIndex((cell) => /letter|symbol/.test(cell));
+
+  if (nodeIndex < 0 || meaningIndex < 0 || letterIndex < 0) return null;
+  if (part.rows.length < 2 || part.rows.length > 6) return null;
+
+  return part.rows.map((row) => {
+    const tag = plainInlineText(row[letterIndex]).replace(/[^A-Za-z0-9]/g, '').slice(0, 2);
+    return {
+      tag,
+      label: cleanInline(row[nodeIndex]),
+      desc: cleanInline(row[meaningIndex]),
+      color: colorForVariableTag(tag, tone),
+    };
+  });
 }
 
 function parseHighlightParagraph(text) {
@@ -649,65 +741,62 @@ function parseConceptItems(items) {
   }).filter(Boolean);
 }
 
-function MarkdownConceptCards({ items }) {
-  const colors = [
-    { bg: 'var(--plum-soft)', ink: 'var(--plum)' },
-    { bg: 'var(--primary-soft)', ink: 'var(--primary)' },
-    { bg: 'var(--accent-soft)', ink: 'var(--accent)' },
-  ];
+function MarkdownConceptCards({ items, tone = 'sun' }) {
+  const colors = conceptToneSequence(tone);
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
-      gap: 12,
+      gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+      gap: 14,
       margin: '10px 0 24px',
-      maxWidth: '72ch',
+      maxWidth: '64ch',
     }}>
       {items.map((item, index) => {
         const c = colors[index % colors.length];
         return (
           <div key={item.label} style={{
             border: '1px solid var(--line)',
-            borderRadius: 8,
+            borderRadius: 18,
             background: 'var(--surface)',
             boxShadow: 'var(--shadow-sm)',
-            padding: 16,
+            padding: 18,
             position: 'relative',
             overflow: 'hidden',
           }}>
             <div style={{
-              width: 34,
-              height: 34,
-              borderRadius: 8,
+              width: 38,
+              height: 38,
+              borderRadius: 12,
               display: 'grid',
               placeItems: 'center',
               background: c.bg,
               color: c.ink,
-              marginBottom: 10,
+              marginBottom: 12,
             }}>
-              <Icon.Graph size={17}/>
+              <Icon.Graph size={18}/>
             </div>
             <div style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 800,
-              fontSize: 15.5,
+              fontSize: 16,
               lineHeight: 1.2,
               marginBottom: 6,
+              paddingRight: 20,
             }}>
               <FormattedText text={cleanInline(item.label)}/>
             </div>
-            <div style={{ color: 'var(--ink-soft)', fontSize: 13.5, lineHeight: 1.55 }}>
+            <div style={{ color: 'var(--ink-soft)', fontSize: 14.5, lineHeight: 1.58 }}>
               <FormattedText text={cleanInline(item.text)}/>
             </div>
             <div style={{
               position: 'absolute',
-              right: -20,
-              bottom: -22,
-              width: 70,
-              height: 70,
+              right: 12,
+              bottom: 12,
+              width: 54,
+              height: 54,
               borderRadius: '50%',
               background: c.bg,
-              opacity: 0.48,
+              opacity: 0.34,
             }}/>
           </div>
         );
@@ -815,7 +904,6 @@ function cleanInline(text) {
     .replace(/<br\/?>/g, ' ')
     .replace(/<\/?strong>/g, '**')
     .replace(/<\/?em>/g, '*')
-    .replace(/\$([^$]+)\$/g, '`$1`')
     .replace(/\u000dightarrow/g, '->')
     .replace(/\u0009o/g, '->')
     .replace(/\\rightarrow/g, '->')
@@ -1174,6 +1262,7 @@ function LessonView({ lesson, course, lessonIndex, totalLessons, onPrev, onNext,
                 audioItems={b.items.map((_, itemIndex) => audioFor(i, `objective-${itemIndex}`))}
                 audioPlayer={audioPlayer}
                 audioQueue={lessonAudioEntries}
+                tone={lesson.color}
               />
             );
             case 'section':    return <SectionHeading key={i} id={b.id} eyebrow={b.eyebrow} title={b.title}/>;
@@ -1204,7 +1293,7 @@ function LessonView({ lesson, course, lessonIndex, totalLessons, onPrev, onNext,
             case 'codebox':    return <CodeBox key={i} label={b.label} code={b.code}/>;
             case 'graph':      return <GraphBlock key={i} initialIntervention={b.intervention} graph={b.graph}/>;
             case 'hiring-graph': return <HiringDagGraph key={i} variant={b.variant}/>;
-            case 'markdown':   return <MarkdownBlock key={i} text={b.text}/>;
+            case 'markdown':   return <MarkdownBlock key={i} text={b.text} tone={lesson.color}/>;
             case 'quiz':       return <div key={i} style={{ margin: '24px 0' }}><InteractiveQuiz key={`${lesson.id}-${i}`} questions={b.questions}/></div>;
             default: return null;
           }

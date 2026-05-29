@@ -30,7 +30,7 @@ const LEARNER0_LESSONS = [
       { kind: 'figure', src: 'data/learner_0/passive_courses/interventions/imgs/img_00.png', caption: "A school noticeboard shows a score gap between tutored and not-tutored students. The question is what is behind that gap.", alt: 'A school noticeboard with a bar chart where the tutored bar is taller than the not tutored bar'},
 
       { kind: 'section', id: 's2', eyebrow: 'Section 2', title: 'Before We Dive In' },
-      { kind: 'p', text: "Most of us have heard a headline like this and nodded along: ___the tutored group scored higher, so tutoring must have helped___. It feels logical. If A comes before B, and B looks better, A must be the reason." },
+      { kind: 'p', text: "Most of us have heard a headline like this and nodded along: ___the tutored group scored higher, so tutoring must have helped___. It feels logical. If $A$ comes before $B$, and $B$ looks better, $A$ must be the reason." },
       { kind: 'p', text: "But here is the catch: the students who received tutoring may have already been different from those who did not — before a single tutoring session happened. In some schools, extra support is directed toward students who are struggling. In others, tutoring is optional or private, and motivated or already high-attaining students may be more likely to sign up. Either way, the two groups are not identical twins waiting to be compared." },
       { kind: 'callout', tone: 'sun', icon: 'Lightbulb', title: 'Key idea',
         text: "When the groups start out different, the gap we see in the final scores is a ___mixture___ — part tutoring effect, part pre-existing difference. Treating the whole gap as proof of tutoring is the misconception we are here to untangle." },
@@ -566,15 +566,23 @@ function parseQuizChunk(chunk, answerInfo) {
 
 function parseAnswerDetails(detailsText) {
   const answers = [];
-  const re = /\*\*Answer\s+\d+:\s*([A-D])\.?\*\*\s*([\s\S]*?)(?=\n\s*\*\*Answer\s+\d+:|<\/details>|$)/gi;
+  const re = /\*\*Answer\s+\d+:\s*([A-D])\.?\*\*\s*([\s\S]*?)(?=\n\s*\*\*Answer\s+\d+[\s:(]|<\/details>|$)/gi;
   let match;
   while ((match = re.exec(detailsText)) !== null) {
     answers.push({
       letter: match[1].toUpperCase(),
-      why: match[2].replace(/\n+/g, ' ').trim(),
+      why: cleanGeneratedQuizExplanation(match[2].replace(/\n+/g, ' ').trim()),
     });
   }
   return answers;
+}
+
+function cleanGeneratedQuizExplanation(text) {
+  return String(text || '')
+    .replace(/\bOptions?\s+[A-D](?:(?:,\s*(?:and\s+)?|\s+and\s+)[A-D])+\s+/gi, 'The other choices ')
+    .replace(/\bOption\s+[A-D]\s+/gi, 'That distractor ')
+    .replace(/;\s+The other choices/g, '; the other choices')
+    .replace(/;\s+That distractor/g, '; that distractor');
 }
 
 function pushMarkdownAndGraphs(blocks, rawText, ctx = {}) {
@@ -621,7 +629,7 @@ function stripLeadingObjectiveQuote(content) {
 
   for (const line of lines) {
     const trimmed = line.trim();
-    if (/^>\s*\*\*After this mini lesson/i.test(trimmed)) {
+    if (/^>\s*(?:\*\*)?(?:After this (?:mini[- ]?)?lesson|After this section|you(?:'ll| will) (?:understand|be able))/i.test(trimmed)) {
       skippingObjectives = true;
       continue;
     }

@@ -170,8 +170,10 @@ function hashQuizString(value) {
 
 function cleanQuizExplanation(text) {
   return String(text || '')
-    .replace(/Options?\s+[A-D](?:,\s*[A-D])*(?:,\s*and\s*[A-D])?\s+/gi, 'The other choices ')
-    .replace(/Option\s+[A-D]\s+/gi, 'That distractor ');
+    .replace(/\bOptions?\s+[A-D](?:(?:,\s*(?:and\s+)?|\s+and\s+)[A-D])+\s+/gi, 'The other choices ')
+    .replace(/\bOption\s+[A-D]\s+/gi, 'That distractor ')
+    .replace(/;\s+The other choices/g, '; the other choices')
+    .replace(/;\s+That distractor/g, '; that distractor');
 }
 
 function QuizQuestion({ q, qi, pick, revealed, onPick }) {
@@ -238,7 +240,9 @@ function QuizQuestion({ q, qi, pick, revealed, onPick }) {
                  state === 'wrong' ? <Icon.X size={16} strokeWidth={3}/> :
                  String.fromCharCode(65 + oi)}
               </span>
-              <span style={{ flex: 1, paddingTop: 3 }}>{opt}</span>
+              <span style={{ flex: 1, paddingTop: 3 }}>
+                <FormattedText text={opt}/>
+              </span>
             </button>
           );
         })}

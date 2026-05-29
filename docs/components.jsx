@@ -4,26 +4,109 @@ const { useState, useEffect, useRef, useMemo } = React;
 
 // ---------- text formatting ----------
 // Renders inline markdown-ish: **bold**, ___italic-emph___, `code`, $math$
+const VARIABLE_TERMS = [
+  'PriorAchievement',
+  'TutoringAssignment',
+  'TestScore',
+  'PatientEngagement',
+  'ReceivedReminder',
+  'AttendedAppointment',
+  'UniversityPrestige',
+  'TechnicalSkill',
+  'ProjectPortfolio',
+  'HiringRecommendation',
+  'InterviewScore',
+  'InterviewOpportunity',
+  'CodeScore',
+  'CodeTestScore',
+].sort((a, b) => b.length - a.length);
+
 function FormattedText({ text }) {
+  const source = String(text || '');
   // tokenize
   const parts = [];
-  let i = 0;
   const push = (node) => parts.push(node);
+  const pushPlain = (value) => tokenizeVariables(value).forEach((node) => {
+    push(React.isValidElement(node) ? React.cloneElement(node, { key: parts.length }) : node);
+  });
   const re = /(\*\*[^*]+\*\*|___[^_]+___|\*[^*\n]+\*|`[^`]+`|\$[^$\n]+\$)/g;
   let last = 0;
   let m;
-  while ((m = re.exec(text)) !== null) {
-    if (m.index > last) push(text.slice(last, m.index));
+  while ((m = re.exec(source)) !== null) {
+    if (m.index > last) pushPlain(source.slice(last, m.index));
     const tok = m[0];
-    if (tok.startsWith('**')) push(<strong key={parts.length}>{tok.slice(2, -2)}</strong>);
-    else if (tok.startsWith('___')) push(<em key={parts.length} className="emph">{tok.slice(3, -3)}</em>);
+    if (tok.startsWith('**')) push(<strong key={parts.length}><FormattedText text={tok.slice(2, -2)}/></strong>);
+    else if (tok.startsWith('___')) push(<em key={parts.length} className="emph"><FormattedText text={tok.slice(3, -3)}/></em>);
     else if (tok.startsWith('`')) push(<code key={parts.length} className="ic">{formatMathish(tok.slice(1, -1))}</code>);
-    else if (tok.startsWith('$')) push(<code key={parts.length} className="ic">{formatMathish(tok.slice(1, -1))}</code>);
-    else if (tok.startsWith('*')) push(<em key={parts.length}>{tok.slice(1, -1)}</em>);
+    else if (tok.startsWith('$')) push(<MathInline key={parts.length} text={tok.slice(1, -1)}/>);
+    else if (tok.startsWith('*')) push(<em key={parts.length}><FormattedText text={tok.slice(1, -1)}/></em>);
     last = m.index + tok.length;
   }
-  if (last < text.length) push(text.slice(last));
+  if (last < source.length) pushPlain(source.slice(last));
   return <>{parts}</>;
+}
+
+function MathInline({ text }) {
+  return <span className="math-inline">{formatMathish(text)}</span>;
+}
+
+function tokenizeVariables(text) {
+  const value = String(text || '');
+  if (!value) return [];
+  const spans = [];
+  const addSpan = (start, end) => {
+    if (start >= 0 && end > start) spans.push({ start, end });
+  };
+  const addCaptureSpans = (pattern, captureIndexes) => {
+    let match;
+    while ((match = pattern.exec(value)) !== null) {
+      let offset = 0;
+      captureIndexes.forEach((captureIndex) => {
+        const captured = match[captureIndex];
+        if (!captured) return;
+        const relative = match[0].indexOf(captured, offset);
+        if (relative < 0) return;
+        const start = match.index + relative;
+        addSpan(start, start + captured.length);
+        offset = relative + captured.length;
+      });
+    }
+  };
+
+  const namedPattern = new RegExp(`\\b(?:${VARIABLE_TERMS.join('|')}|[ZTYXM])\\b`, 'g');
+  let namedMatch;
+  while ((namedMatch = namedPattern.exec(value)) !== null) {
+    addSpan(namedMatch.index, namedMatch.index + namedMatch[0].length);
+  }
+  [
+    [/\b(?:variable|node|outcome)\s+([AB])\b/g, [1]],
+    [/\b([AB])\s+(?:directly\s+)?causes?\s+([AB])\b/g, [1, 2]],
+    [/\b([AB])\s+can\s+also\s+influence\s+([AB])\b/g, [1, 2]],
+    [/\b([AB])\s+comes\s+before\s+([AB])\b/g, [1, 2]],
+    [/\b([AB])\s+looks\s+better\b/g, [1]],
+    [/\b([AB])\s+must\s+be\b/g, [1]],
+    [/\b([AB])\s+is\s+connected\s+to\b/g, [1]],
+    [/\bfrom\s+([AB])\s+to\s+([AB])\b/g, [1, 2]],
+  ].forEach(([pattern, captureIndexes]) => addCaptureSpans(pattern, captureIndexes));
+
+  spans.sort((a, b) => a.start - b.start || b.end - a.end);
+  const nodes = [];
+  let last = 0;
+  spans.forEach((span) => {
+    if (span.start < last) return;
+    if (span.start > last) nodes.push(value.slice(last, span.start));
+    const token = value.slice(span.start, span.end);
+    nodes.push(
+      /^[A-Z]$/.test(token)
+        ? <MathInline text={token}/>
+        : <span className="variable-token">{token}</span>
+    );
+    last = span.end;
+  });
+  if (last < value.length) {
+    nodes.push(value.slice(last));
+  }
+  return nodes;
 }
 
 function formatMathish(text) {
